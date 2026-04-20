@@ -227,3 +227,71 @@ public class NumberFormatConverter : IValueConverter
         return 0;
     }
 }
+
+/// <summary>
+/// 狀態顏色轉換器 - 布林值轉顏色
+/// </summary>
+public class StatusColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is bool isActive)
+        {
+            return isActive 
+                ? Windows.UI.Color.FromArgb(255, 76, 175, 80)   // 綠色 - 啟用
+                : Windows.UI.Color.FromArgb(255, 158, 158, 158); // 灰色 - 停用
+        }
+        return Windows.UI.Color.FromArgb(255, 158, 158, 158);
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}
+
+/// <summary>
+/// 狀態文字轉換器 - 布林值轉文字
+/// </summary>
+public class StatusTextConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is bool isActive)
+        {
+            return isActive ? "啟用" : "停用";
+        }
+        return "未知";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        if (value is string text)
+        {
+            return text == "啟用";
+        }
+        return false;
+    }
+}
+
+/// <summary>
+/// 貨幣格式化轉換器
+/// </summary>
+public class CurrencyFormatConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        string currency = parameter?.ToString() ?? "NT$";
+        
+        if (value is decimal decimalValue) return $"{currency} {decimalValue:N0}";
+        if (value is double doubleValue) return $"{currency} {doubleValue:N0}";
+        if (value is int intValue) return $"{currency} {intValue:N0}";
+        
+        return $"{currency} 0";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}

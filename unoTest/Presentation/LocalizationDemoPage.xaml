@@ -1,0 +1,228 @@
+<Page x:Class="unoTest.Presentation.LocalizationDemoPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:unoTest.Presentation"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      Background="{ThemeResource BackgroundBrush}"
+      x:Uid="LocalizationDemoPage">
+
+    <!-- ====================================================================
+         多語系示範頁面
+         展示如何實作應用程式的多語系支援
+         ==================================================================== -->
+
+    <Grid utu:SafeArea.Insets="VisibleBounds">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 標題列 -->
+        <utu:NavigationBar x:Uid="LocalizationPage_Title" Content="多語系示範" Grid.Row="0"/>
+
+        <ScrollViewer Grid.Row="1" Padding="16">
+            <StackPanel Spacing="24" MaxWidth="800" HorizontalAlignment="Left">
+
+                <!-- ==================== 語言選擇 ==================== -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock x:Uid="Loc_SelectLanguage" 
+                                   Text="選擇語言"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <ComboBox x:Name="LanguageCombo"
+                                  Width="200"
+                                  SelectionChanged="LanguageCombo_SelectionChanged">
+                            <ComboBoxItem Content="繁體中文 (zh-Hant-TW)" Tag="zh-Hant-TW"/>
+                            <ComboBoxItem Content="English (en-US)" Tag="en-US"/>
+                            <ComboBoxItem Content="Español (es)" Tag="es"/>
+                            <ComboBoxItem Content="Français (fr)" Tag="fr"/>
+                            <ComboBoxItem Content="Português (pt-BR)" Tag="pt-BR"/>
+                        </ComboBox>
+
+                        <TextBlock x:Uid="Loc_RestartHint"
+                                   Text="註：部分文字需要重新啟動應用程式才會生效"
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   Opacity="0.7"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- ==================== 靜態文字示範 ==================== -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock x:Uid="Loc_StaticText" 
+                                   Text="靜態文字 (XAML x:Uid)"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <TextBlock x:Uid="Loc_StaticTextDesc"
+                                   Text="這段文字使用 x:Uid 從資源檔載入"
+                                   TextWrapping="Wrap"
+                                   Opacity="0.7"/>
+
+                        <StackPanel Spacing="8" Margin="0,8,0,0">
+                            <!-- 示範各種 UI 元素的多語系 -->
+                            <Button x:Uid="Loc_Button" Content="按鈕文字"/>
+                            
+                            <TextBox x:Uid="Loc_TextBox" 
+                                     Header="輸入欄位"
+                                     PlaceholderText="請輸入文字"/>
+
+                            <CheckBox x:Uid="Loc_CheckBox" Content="勾選選項"/>
+
+                            <ToggleSwitch x:Uid="Loc_ToggleSwitch" 
+                                          Header="開關選項"
+                                          OnContent="開啟"
+                                          OffContent="關閉"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ==================== 動態文字示範 ==================== -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock x:Uid="Loc_DynamicText" 
+                                   Text="動態文字 (IStringLocalizer)"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <TextBlock x:Uid="Loc_DynamicTextDesc"
+                                   Text="這些文字在程式碼中使用 IStringLocalizer 取得"
+                                   TextWrapping="Wrap"
+                                   Opacity="0.7"/>
+
+                        <StackPanel Spacing="8" Margin="0,8,0,0">
+                            <TextBlock x:Name="WelcomeText" Style="{StaticResource BodyTextBlockStyle}"/>
+                            <TextBlock x:Name="DateTimeText" Style="{StaticResource BodyTextBlockStyle}"/>
+                            <TextBlock x:Name="PluralText" Style="{StaticResource BodyTextBlockStyle}"/>
+                        </StackPanel>
+
+                        <!-- 複數形式測試 -->
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                            <TextBlock Text="數量:" VerticalAlignment="Center"/>
+                            <NumberBox x:Name="ItemCountBox"
+                                       Value="1"
+                                       Minimum="0"
+                                       Maximum="100"
+                                       SpinButtonPlacementMode="Inline"
+                                       ValueChanged="ItemCountBox_ValueChanged"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- ==================== 格式化示範 ==================== -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock x:Uid="Loc_Formatting" 
+                                   Text="格式化 (日期、數字、貨幣)"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <Grid ColumnSpacing="16" RowSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="日期:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" x:Name="DateFormatText"/>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="時間:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="TimeFormatText"/>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="數字:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" x:Name="NumberFormatText"/>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="貨幣:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" x:Name="CurrencyFormatText"/>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="百分比:" FontWeight="SemiBold"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" x:Name="PercentFormatText"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ==================== 資源檔結構說明 ==================== -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="資源檔結構說明" Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                            多語系資源檔位於 Strings/ 資料夾，結構如下：
+                        </TextBlock>
+
+                        <Border Background="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                                CornerRadius="4"
+                                Padding="12">
+                            <TextBlock FontFamily="Consolas" FontSize="12" IsTextSelectionEnabled="True">
+                                <Run>Strings/</Run><LineBreak/>
+                                <Run>├── en/</Run><LineBreak/>
+                                <Run>│   └── Resources.resw</Run><LineBreak/>
+                                <Run>├── zh-Hant-TW/</Run><LineBreak/>
+                                <Run>│   └── Resources.resw</Run><LineBreak/>
+                                <Run>├── es/</Run><LineBreak/>
+                                <Run>│   └── Resources.resw</Run><LineBreak/>
+                                <Run>├── fr/</Run><LineBreak/>
+                                <Run>│   └── Resources.resw</Run><LineBreak/>
+                                <Run>└── pt-BR/</Run><LineBreak/>
+                                <Run>    └── Resources.resw</Run>
+                            </TextBlock>
+                        </Border>
+
+                        <TextBlock TextWrapping="Wrap" Opacity="0.7" Margin="0,8,0,0">
+                            在 XAML 中使用 x:Uid 綁定資源，在 C# 中使用 IStringLocalizer 取得文字。
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- ==================== 程式碼範例 ==================== -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="程式碼範例" Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <TextBlock Text="XAML 中使用 x:Uid:" FontWeight="SemiBold"/>
+                        <Border Background="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                                CornerRadius="4"
+                                Padding="12">
+                            <TextBlock FontFamily="Consolas" FontSize="12" IsTextSelectionEnabled="True"
+                                       Text="&lt;TextBlock x:Uid=&quot;WelcomeMessage&quot; /&gt;"/>
+                        </Border>
+
+                        <TextBlock Text="C# 中使用 IStringLocalizer:" FontWeight="SemiBold" Margin="0,8,0,0"/>
+                        <Border Background="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                                CornerRadius="4"
+                                Padding="12">
+                            <TextBlock FontFamily="Consolas" FontSize="12" IsTextSelectionEnabled="True">
+                                <Run>// 注入 IStringLocalizer</Run><LineBreak/>
+                                <Run>private readonly IStringLocalizer _localizer;</Run><LineBreak/>
+                                <LineBreak/>
+                                <Run>// 取得本地化文字</Run><LineBreak/>
+                                <Run>var text = _localizer["WelcomeMessage"];</Run><LineBreak/>
+                                <LineBreak/>
+                                <Run>// 帶參數的格式化</Run><LineBreak/>
+                                <Run>var greeting = _localizer["Hello", userName];</Run>
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

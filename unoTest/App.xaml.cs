@@ -103,7 +103,13 @@ public partial class App : Application
             new ViewMap<LayoutDemoPage, LayoutDemoViewModel>(),
             new ViewMap<CrudDemoPage, CrudDemoViewModel>(),
             new ViewMap<NodeLinkDemoPage>(),
-            new ViewMap<SettingsPage, SettingsViewModel>()
+            new ViewMap<SettingsPage, SettingsViewModel>(),
+            // 新功能頁面
+            new ViewMap<ImageGalleryPage>(),
+            new ViewMap<LinkedListDemoPage>(),
+            new ViewMap<TabDemoPage>(),
+            new ViewMap<DialogDemoPage>(),
+            new ViewMap<LocalizationDemoPage>()
         );
 
         routes.Register(
@@ -118,6 +124,12 @@ public partial class App : Application
                     new ("CrudDemo", View: views.FindByViewModel<CrudDemoViewModel>()),
                     new ("NodeLinkDemo", View: views.FindByView<NodeLinkDemoPage>()),
                     new ("Settings", View: views.FindByViewModel<SettingsViewModel>()),
+                    // 新功能路由
+                    new ("ImageGallery", View: views.FindByView<ImageGalleryPage>()),
+                    new ("LinkedListDemo", View: views.FindByView<LinkedListDemoPage>()),
+                    new ("TabDemo", View: views.FindByView<TabDemoPage>()),
+                    new ("DialogDemo", View: views.FindByView<DialogDemoPage>()),
+                    new ("LocalizationDemo", View: views.FindByView<LocalizationDemoPage>()),
                 ]
             )
         );

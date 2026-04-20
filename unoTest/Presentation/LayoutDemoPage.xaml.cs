@@ -1,4 +1,17 @@
+using Microsoft.UI.Xaml.Controls;
+
 namespace unoTest.Presentation;
+
+/// <summary>
+/// 頁面布局教學頁面
+/// </summary>
+public sealed partial class LayoutDemoPage : Page
+{
+    public LayoutDemoPage()
+    {
+        this.InitializeComponent();
+    }
+}
 
 /// <summary>
 /// 頁面布局教學頁面的 ViewModel

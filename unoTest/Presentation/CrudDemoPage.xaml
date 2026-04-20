@@ -25,6 +25,8 @@
         <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <converters:NumberFormatConverter x:Key="NumberFormatConverter"/>
         <converters:DateFormatConverter x:Key="DateFormatConverter"/>
+        <converters:StatusColorConverter x:Key="StatusColorConverter"/>
+        <converters:StatusTextConverter x:Key="StatusTextConverter"/>
     </Page.Resources>
 
     <Grid>

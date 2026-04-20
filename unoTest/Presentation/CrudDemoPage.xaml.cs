@@ -12,6 +12,16 @@ public sealed partial class CrudDemoPage : Page
     public CrudDemoPage()
     {
         this.InitializeComponent();
+        this.Loaded += OnPageLoaded;
+    }
+
+    private void OnPageLoaded(object sender, RoutedEventArgs e)
+    {
+        // 設置 XamlRoot，讓 ViewModel 中的 ContentDialog 可以正確顯示
+        if (DataContext is CrudDemoViewModel vm && this.XamlRoot != null)
+        {
+            vm.SetXamlRoot(this.XamlRoot);
+        }
     }
 
     private void OnSearchEnterKeyInvoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)

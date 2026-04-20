@@ -1,5 +1,8 @@
 using System.Collections.ObjectModel;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using unoTest.Services;
+using System.Text;
 
 namespace unoTest.Presentation;
 
@@ -9,7 +12,8 @@ namespace unoTest.Presentation;
 public partial class CrudDemoViewModel : ObservableObject
 {
     private readonly IProductService _productService;
-    private readonly INavigator _navigator;
+    private readonly INavigator? _navigator;
+    private XamlRoot? _xamlRoot;
 
     #region Observable Properties
 
@@ -85,7 +89,7 @@ public partial class CrudDemoViewModel : ObservableObject
         INavigator? navigator = null)
     {
         _productService = productService ?? new MockProductService();
-        _navigator = navigator!;
+        _navigator = navigator;
 
         // 初始化 Commands
         SearchCommand = new AsyncRelayCommand(LoadDataAsync);
@@ -102,6 +106,14 @@ public partial class CrudDemoViewModel : ObservableObject
 
         // 初始載入
         _ = LoadDataAsync();
+    }
+
+    /// <summary>
+    /// 設置 XamlRoot（必須在頁面載入後呼叫）
+    /// </summary>
+    public void SetXamlRoot(XamlRoot xamlRoot)
+    {
+        _xamlRoot = xamlRoot;
     }
 
     #region Data Operations
@@ -150,16 +162,30 @@ public partial class CrudDemoViewModel : ObservableObject
 
     private async Task AddProductAsync()
     {
+        if (_xamlRoot == null) return;
+
         var dialog = new ContentDialog
         {
             Title = "新增產品",
             PrimaryButtonText = "儲存",
             CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = _xamlRoot
         };
 
         var editForm = CreateEditForm(null);
         dialog.Content = editForm;
+
+        // 驗證輸入
+        dialog.PrimaryButtonClick += (s, e) =>
+        {
+            var nameTextBox = editForm.Children.OfType<TextBox>().FirstOrDefault(t => t.Name == "NameTextBox");
+            if (string.IsNullOrWhiteSpace(nameTextBox?.Text))
+            {
+                e.Cancel = true;
+                ShowValidationError(nameTextBox!, "產品名稱不可為空");
+            }
+        };
 
         var result = await dialog.ShowAsync();
 
@@ -173,18 +199,30 @@ public partial class CrudDemoViewModel : ObservableObject
 
     private async Task EditProductAsync(ProductViewItem? item)
     {
-        if (item == null) return;
+        if (item == null || _xamlRoot == null) return;
 
         var dialog = new ContentDialog
         {
             Title = "編輯產品",
             PrimaryButtonText = "儲存",
             CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = _xamlRoot
         };
 
         var editForm = CreateEditForm(item.Product);
         dialog.Content = editForm;
+
+        // 驗證輸入
+        dialog.PrimaryButtonClick += (s, e) =>
+        {
+            var nameTextBox = editForm.Children.OfType<TextBox>().FirstOrDefault(t => t.Name == "NameTextBox");
+            if (string.IsNullOrWhiteSpace(nameTextBox?.Text))
+            {
+                e.Cancel = true;
+                ShowValidationError(nameTextBox!, "產品名稱不可為空");
+            }
+        };
 
         var result = await dialog.ShowAsync();
 
@@ -198,7 +236,7 @@ public partial class CrudDemoViewModel : ObservableObject
 
     private async Task DeleteProductAsync(ProductViewItem? item)
     {
-        if (item == null) return;
+        if (item == null || _xamlRoot == null) return;
 
         var dialog = new ContentDialog
         {
@@ -206,7 +244,8 @@ public partial class CrudDemoViewModel : ObservableObject
             Content = $"確定要刪除「{item.Name}」嗎？此操作無法復原。",
             PrimaryButtonText = "刪除",
             CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Close
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = _xamlRoot
         };
 
         var result = await dialog.ShowAsync();
@@ -220,6 +259,8 @@ public partial class CrudDemoViewModel : ObservableObject
 
     private async Task DeleteSelectedAsync()
     {
+        if (_xamlRoot == null) return;
+
         var selectedIds = _selectedItems.Select(p => p.Id).ToList();
         if (!selectedIds.Any()) return;
 
@@ -229,7 +270,8 @@ public partial class CrudDemoViewModel : ObservableObject
             Content = $"確定要刪除選中的 {selectedIds.Count} 個產品嗎？此操作無法復原。",
             PrimaryButtonText = "刪除",
             CloseButtonText = "取消",
-            DefaultButton = ContentDialogButton.Close
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = _xamlRoot
         };
 
         var result = await dialog.ShowAsync();
@@ -243,9 +285,86 @@ public partial class CrudDemoViewModel : ObservableObject
 
     private async Task ExportAsync()
     {
-        // 實作匯出功能（CSV/Excel）
-        await Task.CompletedTask;
-        // TODO: 實作匯出邏輯
+        if (_xamlRoot == null) return;
+
+        try
+        {
+            // 獲取所有資料用於匯出
+            var allData = await _productService.GetPagedAsync(1, int.MaxValue, SearchKeyword, 
+                SelectedCategory == "全部" ? null : SelectedCategory);
+
+            if (!allData.Items.Any())
+            {
+                await ShowMessageAsync("匯出", "沒有可匯出的資料。");
+                return;
+            }
+
+            // 生成 CSV 內容
+            var csv = new StringBuilder();
+            csv.AppendLine("ID,產品名稱,描述,分類,價格,庫存,狀態,建立時間");
+
+            foreach (var item in allData.Items)
+            {
+                csv.AppendLine($"{item.Id},\"{EscapeCsv(item.Name)}\",\"{EscapeCsv(item.Description ?? "")}\",\"{item.Category}\",{item.Price},{item.Stock},{(item.IsActive ? "啟用" : "停用")},{item.CreatedAt:yyyy-MM-dd HH:mm:ss}");
+            }
+
+            // 顯示匯出結果（在實際應用中應該使用 FileSavePicker）
+            var previewDialog = new ContentDialog
+            {
+                Title = $"匯出成功 - 共 {allData.Items.Count()} 筆",
+                Content = new ScrollViewer
+                {
+                    MaxHeight = 400,
+                    Content = new TextBlock
+                    {
+                        Text = csv.ToString(),
+                        FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas"),
+                        FontSize = 12,
+                        IsTextSelectionEnabled = true
+                    }
+                },
+                CloseButtonText = "關閉",
+                XamlRoot = _xamlRoot
+            };
+
+            await previewDialog.ShowAsync();
+        }
+        catch (Exception ex)
+        {
+            await ShowMessageAsync("匯出失敗", $"發生錯誤：{ex.Message}");
+        }
+    }
+
+    private string EscapeCsv(string value)
+    {
+        return value.Replace("\"", "\"\"");
+    }
+
+    private async Task ShowMessageAsync(string title, string message)
+    {
+        if (_xamlRoot == null) return;
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = message,
+            CloseButtonText = "確定",
+            XamlRoot = _xamlRoot
+        };
+
+        await dialog.ShowAsync();
+    }
+
+    private void ShowValidationError(Control control, string message)
+    {
+        // 設置錯誤提示
+        ToolTipService.SetToolTip(control, message);
+        
+        // 視覺提示（可選：添加紅色邊框等）
+        if (control is TextBox textBox)
+        {
+            textBox.Header = $"產品名稱 ⚠️ {message}";
+        }
     }
 
     #endregion

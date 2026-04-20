@@ -1,0 +1,269 @@
+<Page x:Class="unoTest.Presentation.TabDemoPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:unoTest.Presentation"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+      Background="{ThemeResource BackgroundBrush}">
+
+    <!-- ====================================================================
+         Tab 頁面切換示範
+         展示 TabView, Pivot, NavigationView 等切換方式
+         ==================================================================== -->
+
+    <Grid utu:SafeArea.Insets="VisibleBounds">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 標題列 -->
+        <utu:NavigationBar Content="Tab 頁面切換" Grid.Row="0"/>
+
+        <Pivot Grid.Row="1">
+            <!-- ==================== 方式一：TabView ==================== -->
+            <PivotItem Header="TabView">
+                <Grid Padding="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="可關閉、可新增的分頁標籤" 
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Margin="0,0,0,8"/>
+
+                    <muxc:TabView x:Name="MainTabView"
+                                  Grid.Row="1"
+                                  IsAddTabButtonVisible="True"
+                                  AddTabButtonClick="TabView_AddTabButtonClick"
+                                  TabCloseRequested="TabView_TabCloseRequested"
+                                  SelectionChanged="TabView_SelectionChanged">
+                        <muxc:TabView.TabItems>
+                            <muxc:TabViewItem Header="首頁">
+                                <muxc:TabViewItem.IconSource>
+                                    <muxc:SymbolIconSource Symbol="Home"/>
+                                </muxc:TabViewItem.IconSource>
+                                <Grid Padding="16">
+                                    <StackPanel Spacing="12">
+                                        <TextBlock Text="歡迎來到首頁" Style="{StaticResource TitleTextBlockStyle}"/>
+                                        <TextBlock Text="這是 TabView 的第一個分頁" Opacity="0.7"/>
+                                    </StackPanel>
+                                </Grid>
+                            </muxc:TabViewItem>
+                            <muxc:TabViewItem Header="文件">
+                                <muxc:TabViewItem.IconSource>
+                                    <muxc:SymbolIconSource Symbol="Document"/>
+                                </muxc:TabViewItem.IconSource>
+                                <Grid Padding="16">
+                                    <StackPanel Spacing="12">
+                                        <TextBlock Text="文件列表" Style="{StaticResource TitleTextBlockStyle}"/>
+                                        <ListView>
+                                            <ListViewItem Content="文件 1.docx"/>
+                                            <ListViewItem Content="文件 2.pdf"/>
+                                            <ListViewItem Content="文件 3.xlsx"/>
+                                        </ListView>
+                                    </StackPanel>
+                                </Grid>
+                            </muxc:TabViewItem>
+                            <muxc:TabViewItem Header="設定" IsClosable="False">
+                                <muxc:TabViewItem.IconSource>
+                                    <muxc:SymbolIconSource Symbol="Setting"/>
+                                </muxc:TabViewItem.IconSource>
+                                <Grid Padding="16">
+                                    <StackPanel Spacing="12">
+                                        <TextBlock Text="設定 (不可關閉)" Style="{StaticResource TitleTextBlockStyle}"/>
+                                        <ToggleSwitch Header="深色模式"/>
+                                        <ToggleSwitch Header="通知"/>
+                                    </StackPanel>
+                                </Grid>
+                            </muxc:TabViewItem>
+                        </muxc:TabView.TabItems>
+                    </muxc:TabView>
+                </Grid>
+            </PivotItem>
+
+            <!-- ==================== 方式二：Pivot ==================== -->
+            <PivotItem Header="Pivot">
+                <Grid Padding="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="適合少量固定分頁的水平滑動切換" 
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Margin="0,0,0,8"/>
+
+                    <Pivot Grid.Row="1">
+                        <PivotItem Header="全部">
+                            <ListView>
+                                <ListViewItem Content="項目 A (全部)"/>
+                                <ListViewItem Content="項目 B (全部)"/>
+                                <ListViewItem Content="項目 C (全部)"/>
+                            </ListView>
+                        </PivotItem>
+                        <PivotItem Header="進行中">
+                            <ListView>
+                                <ListViewItem Content="項目 A (進行中)"/>
+                            </ListView>
+                        </PivotItem>
+                        <PivotItem Header="已完成">
+                            <ListView>
+                                <ListViewItem Content="項目 B (已完成)"/>
+                                <ListViewItem Content="項目 C (已完成)"/>
+                            </ListView>
+                        </PivotItem>
+                    </Pivot>
+                </Grid>
+            </PivotItem>
+
+            <!-- ==================== 方式三：NavigationView ==================== -->
+            <PivotItem Header="NavigationView">
+                <Grid>
+                    <muxc:NavigationView x:Name="NavView"
+                                         IsBackButtonVisible="Collapsed"
+                                         IsSettingsVisible="False"
+                                         PaneDisplayMode="Top"
+                                         SelectionChanged="NavView_SelectionChanged">
+                        <muxc:NavigationView.MenuItems>
+                            <muxc:NavigationViewItem Content="概覽" Tag="Overview">
+                                <muxc:NavigationViewItem.Icon>
+                                    <FontIcon Glyph="&#xE80F;"/>
+                                </muxc:NavigationViewItem.Icon>
+                            </muxc:NavigationViewItem>
+                            <muxc:NavigationViewItem Content="分析" Tag="Analytics">
+                                <muxc:NavigationViewItem.Icon>
+                                    <FontIcon Glyph="&#xE9D9;"/>
+                                </muxc:NavigationViewItem.Icon>
+                            </muxc:NavigationViewItem>
+                            <muxc:NavigationViewItem Content="報表" Tag="Reports">
+                                <muxc:NavigationViewItem.Icon>
+                                    <FontIcon Glyph="&#xE9F9;"/>
+                                </muxc:NavigationViewItem.Icon>
+                            </muxc:NavigationViewItem>
+                        </muxc:NavigationView.MenuItems>
+
+                        <Frame x:Name="NavViewFrame">
+                            <Grid Padding="24">
+                                <TextBlock x:Name="NavViewContent" 
+                                           Text="選擇一個項目"
+                                           Style="{StaticResource TitleTextBlockStyle}"/>
+                            </Grid>
+                        </Frame>
+                    </muxc:NavigationView>
+                </Grid>
+            </PivotItem>
+
+            <!-- ==================== 方式四：SegmentedControl ==================== -->
+            <PivotItem Header="Segmented">
+                <Grid Padding="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="分段控件，適合 2-5 個選項的快速切換" 
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Margin="0,0,0,8"/>
+
+                    <!-- 使用 RadioButtons 模擬 Segmented Control -->
+                    <Border Grid.Row="1" 
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="8"
+                            Padding="4"
+                            HorizontalAlignment="Left"
+                            Margin="0,0,0,16">
+                        <StackPanel x:Name="SegmentedControl" Orientation="Horizontal">
+                            <RadioButton x:Name="Segment1" 
+                                         Content="日" 
+                                         GroupName="Period"
+                                         Style="{StaticResource DefaultToggleButtonStyle}"
+                                         IsChecked="True"
+                                         Checked="Segment_Checked"/>
+                            <RadioButton x:Name="Segment2"
+                                         Content="週"
+                                         GroupName="Period"
+                                         Style="{StaticResource DefaultToggleButtonStyle}"
+                                         Checked="Segment_Checked"/>
+                            <RadioButton x:Name="Segment3"
+                                         Content="月"
+                                         GroupName="Period"
+                                         Style="{StaticResource DefaultToggleButtonStyle}"
+                                         Checked="Segment_Checked"/>
+                            <RadioButton x:Name="Segment4"
+                                         Content="年"
+                                         GroupName="Period"
+                                         Style="{StaticResource DefaultToggleButtonStyle}"
+                                         Checked="Segment_Checked"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="2"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                            CornerRadius="8"
+                            Padding="16">
+                        <StackPanel>
+                            <TextBlock x:Name="SegmentContent" 
+                                       Text="顯示「日」的內容"
+                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+                            <TextBlock x:Name="SegmentDescription"
+                                       Text="每日數據統計"
+                                       Opacity="0.7"
+                                       Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </PivotItem>
+
+            <!-- ==================== 方式五：TabBar (Uno Toolkit) ==================== -->
+            <PivotItem Header="TabBar">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 內容區 -->
+                    <Grid x:Name="TabBarContent" Grid.Row="0" Padding="16">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <FontIcon x:Name="TabBarIcon" Glyph="&#xE80F;" FontSize="48" Opacity="0.5"/>
+                            <TextBlock x:Name="TabBarText" 
+                                       Text="首頁" 
+                                       Style="{StaticResource TitleTextBlockStyle}"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,16,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 底部 TabBar -->
+                    <utu:TabBar Grid.Row="1" SelectionChanged="TabBar_SelectionChanged">
+                        <utu:TabBar.Items>
+                            <utu:TabBarItem Content="首頁" IsSelected="True">
+                                <utu:TabBarItem.Icon>
+                                    <FontIcon Glyph="&#xE80F;"/>
+                                </utu:TabBarItem.Icon>
+                            </utu:TabBarItem>
+                            <utu:TabBarItem Content="搜尋">
+                                <utu:TabBarItem.Icon>
+                                    <FontIcon Glyph="&#xE721;"/>
+                                </utu:TabBarItem.Icon>
+                            </utu:TabBarItem>
+                            <utu:TabBarItem Content="通知">
+                                <utu:TabBarItem.Icon>
+                                    <FontIcon Glyph="&#xE7E7;"/>
+                                </utu:TabBarItem.Icon>
+                            </utu:TabBarItem>
+                            <utu:TabBarItem Content="我的">
+                                <utu:TabBarItem.Icon>
+                                    <FontIcon Glyph="&#xE77B;"/>
+                                </utu:TabBarItem.Icon>
+                            </utu:TabBarItem>
+                        </utu:TabBar.Items>
+                    </utu:TabBar>
+                </Grid>
+            </PivotItem>
+        </Pivot>
+    </Grid>
+</Page>

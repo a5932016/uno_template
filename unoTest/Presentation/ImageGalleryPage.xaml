@@ -1,0 +1,262 @@
+<Page x:Class="unoTest.Presentation.ImageGalleryPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:unoTest.Presentation"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      Background="{ThemeResource BackgroundBrush}">
+
+    <!-- ====================================================================
+         圖片顯示頁面
+         支援圖片瀏覽、縮放、上傳等功能
+         ==================================================================== -->
+
+    <Grid utu:SafeArea.Insets="VisibleBounds">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 標題列與工具列 -->
+        <Grid Grid.Row="0" Padding="16,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="圖片庫" 
+                       Style="{StaticResource TitleTextBlockStyle}"
+                       VerticalAlignment="Center"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button x:Name="UploadButton" Content="上傳圖片" Click="UploadButton_Click">
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="U" Modifiers="Control"/>
+                    </Button.KeyboardAccelerators>
+                </Button>
+                <ComboBox x:Name="ViewModeCombo" 
+                          SelectedIndex="0"
+                          SelectionChanged="ViewModeCombo_SelectionChanged">
+                    <ComboBoxItem Content="網格檢視"/>
+                    <ComboBoxItem Content="列表檢視"/>
+                    <ComboBoxItem Content="詳細檢視"/>
+                </ComboBox>
+            </StackPanel>
+        </Grid>
+
+        <!-- 主內容區 -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 圖片網格 -->
+            <GridView x:Name="ImageGridView"
+                      ItemsSource="{Binding Images}"
+                      SelectionMode="Extended"
+                      SelectionChanged="ImageGridView_SelectionChanged"
+                      Padding="16">
+                <GridView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Width="180" Height="180" 
+                              Margin="4"
+                              CornerRadius="8"
+                              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- 圖片 -->
+                            <Border Grid.Row="0" 
+                                    CornerRadius="8,8,0,0"
+                                    Background="{ThemeResource SystemControlBackgroundBaseLowBrush}">
+                                <Image Source="{Binding ThumbnailUrl}"
+                                       Stretch="UniformToFill"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                            </Border>
+
+                            <!-- 圖片資訊 -->
+                            <StackPanel Grid.Row="1" Padding="8,4">
+                                <TextBlock Text="{Binding FileName}"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxLines="1"/>
+                                <TextBlock Text="{Binding FileSizeText}"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Opacity="0.6"/>
+                            </StackPanel>
+
+                            <!-- 選擇指示器 -->
+                            <Border Grid.Row="0" 
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Margin="8"
+                                    Padding="4"
+                                    CornerRadius="4"
+                                    Background="{ThemeResource SystemAccentColor}"
+                                    Visibility="{Binding IsSelected, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <FontIcon Glyph="&#xE73E;" FontSize="12" Foreground="White"/>
+                            </Border>
+
+                            <!-- 右鍵選單 -->
+                            <Grid.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="開啟" Icon="OpenFile" Click="OpenImage_Click"/>
+                                    <MenuFlyoutItem Text="下載" Icon="Download" Click="DownloadImage_Click"/>
+                                    <MenuFlyoutSeparator/>
+                                    <MenuFlyoutItem Text="複製" Icon="Copy" Click="CopyImage_Click"/>
+                                    <MenuFlyoutItem Text="刪除" Icon="Delete" Click="DeleteImage_Click"/>
+                                    <MenuFlyoutSeparator/>
+                                    <MenuFlyoutItem Text="屬性" Icon="Tag" Click="ImageProperties_Click"/>
+                                </MenuFlyout>
+                            </Grid.ContextFlyout>
+                        </Grid>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+
+            <!-- 圖片預覽面板 -->
+            <Border Grid.Column="1"
+                    Width="320"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    Visibility="{Binding SelectedImage, Converter={StaticResource NullToVisibilityConverter}}">
+                <ScrollViewer>
+                    <StackPanel Padding="16" Spacing="16">
+                        <!-- 預覽圖 -->
+                        <Border Height="200"
+                                CornerRadius="8"
+                                Background="{ThemeResource SystemControlBackgroundBaseLowBrush}">
+                            <Image Source="{Binding SelectedImage.FullUrl}"
+                                   Stretch="Uniform"/>
+                        </Border>
+
+                        <!-- 圖片資訊 -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="{Binding SelectedImage.FileName}"
+                                       Style="{StaticResource SubtitleTextBlockStyle}"
+                                       TextWrapping="Wrap"/>
+
+                            <Grid ColumnSpacing="8" RowSpacing="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="大小:" Opacity="0.7"/>
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedImage.FileSizeText}"/>
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="尺寸:" Opacity="0.7"/>
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedImage.DimensionsText}"/>
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="格式:" Opacity="0.7"/>
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedImage.Format}"/>
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="建立時間:" Opacity="0.7"/>
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedImage.CreatedAtText}"/>
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="修改時間:" Opacity="0.7"/>
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedImage.ModifiedAtText}"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- 操作按鈕 -->
+                        <StackPanel Spacing="8">
+                            <Button Content="全螢幕檢視" 
+                                    HorizontalAlignment="Stretch"
+                                    Click="FullscreenView_Click"/>
+                            <Button Content="編輯圖片"
+                                    HorizontalAlignment="Stretch"
+                                    Click="EditImage_Click"/>
+                            <Button Content="分享"
+                                    HorizontalAlignment="Stretch"
+                                    Click="ShareImage_Click"/>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- 空狀態 -->
+            <StackPanel Grid.Column="0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="16"
+                        Visibility="{Binding HasNoImages, Converter={StaticResource BoolToVisibilityConverter}}">
+                <FontIcon Glyph="&#xEB9F;" FontSize="64" Opacity="0.5"/>
+                <TextBlock Text="尚無圖片" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                <TextBlock Text="點擊上傳按鈕來新增圖片" Opacity="0.7"/>
+                <Button Content="上傳圖片" Click="UploadButton_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 全螢幕檢視 Overlay -->
+        <Grid x:Name="FullscreenOverlay"
+              Grid.RowSpan="2"
+              Background="#E0000000"
+              Visibility="Collapsed">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 頂部工具列 -->
+            <Grid Grid.Row="0" Padding="16" Background="#80000000">
+                <TextBlock Text="{Binding SelectedImage.FileName}"
+                           Foreground="White"
+                           VerticalAlignment="Center"/>
+                <Button Content="&#xE711;"
+                        FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Background="Transparent"
+                        Foreground="White"
+                        HorizontalAlignment="Right"
+                        Click="CloseFullscreen_Click"/>
+            </Grid>
+
+            <!-- 圖片顯示區 -->
+            <ScrollViewer Grid.Row="1"
+                          ZoomMode="Enabled"
+                          MinZoomFactor="0.5"
+                          MaxZoomFactor="5"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                <Image Source="{Binding SelectedImage.FullUrl}"
+                       Stretch="Uniform"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+            </ScrollViewer>
+
+            <!-- 底部控制列 -->
+            <StackPanel Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        Padding="16"
+                        Spacing="16"
+                        Background="#80000000">
+                <Button Content="&#xE76B;" FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Background="Transparent" Foreground="White"
+                        Click="PreviousImage_Click" ToolTipService.ToolTip="上一張"/>
+                <Button Content="&#xE71E;" FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Background="Transparent" Foreground="White"
+                        Click="ZoomOut_Click" ToolTipService.ToolTip="縮小"/>
+                <Button Content="&#xE8A3;" FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Background="Transparent" Foreground="White"
+                        Click="ZoomToFit_Click" ToolTipService.ToolTip="適合視窗"/>
+                <Button Content="&#xE710;" FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Background="Transparent" Foreground="White"
+                        Click="ZoomIn_Click" ToolTipService.ToolTip="放大"/>
+                <Button Content="&#xE76C;" FontFamily="{StaticResource SymbolThemeFontFamily}"
+                        Background="Transparent" Foreground="White"
+                        Click="NextImage_Click" ToolTipService.ToolTip="下一張"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

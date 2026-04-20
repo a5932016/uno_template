@@ -1,0 +1,45 @@
+<Page x:Class="unoTest.Presentation.LinkedListDemoPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:unoTest.Presentation"
+      xmlns:controls="using:unoTest.Controls"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      Background="{ThemeResource BackgroundBrush}">
+
+    <!-- ====================================================================
+         List 內 Button 連線示範頁面
+         展示如何在列表項目之間建立連線關係
+         ==================================================================== -->
+
+    <Grid utu:SafeArea.Insets="VisibleBounds">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 標題列 -->
+        <utu:NavigationBar Content="List 連線示範" Grid.Row="0"/>
+
+        <!-- 工具列 -->
+        <StackPanel Grid.Row="1" 
+                    Orientation="Horizontal" 
+                    Padding="16,8"
+                    Spacing="8">
+            <Button x:Name="AddItemButton" Content="新增項目" Click="AddItemButton_Click"/>
+            <Button x:Name="ClearLinksButton" Content="清除連線" Click="ClearLinksButton_Click"/>
+            <TextBlock VerticalAlignment="Center" Opacity="0.7" Margin="16,0,0,0">
+                提示：點擊左右兩側的圓點來建立連線
+            </TextBlock>
+        </StackPanel>
+
+        <!-- 連線列表控件 -->
+        <controls:LinkedListControl x:Name="LinkedList"
+                                    Grid.Row="2"
+                                    Margin="16"
+                                    LinkCreated="LinkedList_LinkCreated"
+                                    LinkRemoved="LinkedList_LinkRemoved"
+                                    ItemEditRequested="LinkedList_ItemEditRequested"
+                                    ItemDeleteRequested="LinkedList_ItemDeleteRequested"/>
+    </Grid>
+</Page>
