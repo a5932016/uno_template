@@ -1,0 +1,32 @@
+<Page x:Class="unoTest.Presentation.NodeLinkDemoPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:unoTest.Presentation"
+      xmlns:controls="using:unoTest.Controls"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      Background="{ThemeResource BackgroundBrush}">
+
+    <!-- ====================================================================
+         Button 連線功能展示頁面
+         展示如何使用 NodeLinkCanvas 控件建立互動式流程圖
+         ==================================================================== -->
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 標題列 -->
+        <utu:NavigationBar Content="節點連線示範" Grid.Row="0"/>
+
+        <!-- 節點連線畫布 -->
+        <controls:NodeLinkCanvas x:Name="Canvas"
+                                 Grid.Row="1"
+                                 ShowGrid="True"
+                                 NodeMinWidth="120"
+                                 NodeAdded="Canvas_NodeAdded"
+                                 LinkAdded="Canvas_LinkAdded"
+                                 NodeSelected="Canvas_NodeSelected"/>
+    </Grid>
+</Page>

@@ -1,0 +1,120 @@
+<UserControl x:Class="unoTest.Controls.CardControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="200"
+             d:DesignWidth="300">
+
+    <!-- ====================================================================
+         卡片控件範例 (UserControl Template)
+         
+         功能說明：
+         1. 可重複使用的卡片元件
+         2. 支援標題、內容、頁腳區域
+         3. 支援圖標、動作按鈕
+         4. 支援展開/收合
+         ==================================================================== -->
+
+    <Border x:Name="CardBorder"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="0">
+
+        <Grid RowSpacing="0">
+            <Grid.RowDefinitions>
+                <!-- 標題區 -->
+                <RowDefinition Height="Auto"/>
+                <!-- 內容區 -->
+                <RowDefinition Height="*"/>
+                <!-- 頁腳區 -->
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- 標題區 -->
+            <Grid Grid.Row="0" 
+                  x:Name="HeaderArea"
+                  Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                  Padding="16,12"
+                  Visibility="{Binding ShowHeader, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 圖標 -->
+                <ContentPresenter x:Name="IconPresenter"
+                                  Grid.Column="0"
+                                  Content="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}}"
+                                  Margin="0,0,12,0"
+                                  VerticalAlignment="Center"/>
+
+                <!-- 標題與副標題 -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock x:Name="TitleTextBlock"
+                               Text="{Binding Title, RelativeSource={RelativeSource TemplatedParent}}"
+                               Style="{StaticResource SubtitleTextBlockStyle}"
+                               TextTrimming="CharacterEllipsis"/>
+                    <TextBlock x:Name="SubtitleTextBlock"
+                               Text="{Binding Subtitle, RelativeSource={RelativeSource TemplatedParent}}"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Opacity="0.7"
+                               Visibility="{Binding Subtitle, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource StringEmptyToVisibilityConverter}}"/>
+                </StackPanel>
+
+                <!-- 展開/收合按鈕 -->
+                <Button x:Name="ExpandButton"
+                        Grid.Column="2"
+                        Style="{StaticResource MaterialIconButtonStyle}"
+                        Visibility="{Binding IsExpandable, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolToVisibilityConverter}}"
+                        Click="ExpandButton_Click">
+                    <FontIcon x:Name="ExpandIcon" Glyph="&#xE70D;" FontSize="12"/>
+                </Button>
+            </Grid>
+
+            <!-- 內容區 -->
+            <Grid Grid.Row="1" 
+                  x:Name="ContentArea"
+                  Padding="16">
+                <ContentPresenter x:Name="ContentPresenter"
+                                  Content="{Binding CardContent, RelativeSource={RelativeSource TemplatedParent}}"/>
+            </Grid>
+
+            <!-- 頁腳區 -->
+            <Grid Grid.Row="2" 
+                  x:Name="FooterArea"
+                  Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                  Padding="16,12"
+                  Visibility="{Binding ShowFooter, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 頁腳內容 -->
+                <ContentPresenter Grid.Column="0"
+                                  Content="{Binding Footer, RelativeSource={RelativeSource TemplatedParent}}"/>
+
+                <!-- 動作按鈕 -->
+                <StackPanel Grid.Column="1" 
+                            Orientation="Horizontal" 
+                            Spacing="8">
+                    <Button x:Name="SecondaryActionButton"
+                            Content="{Binding SecondaryActionText, RelativeSource={RelativeSource TemplatedParent}}"
+                            Style="{StaticResource MaterialTextButtonStyle}"
+                            Visibility="{Binding SecondaryActionText, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource StringEmptyToVisibilityConverter}}"
+                            Command="{Binding SecondaryCommand, RelativeSource={RelativeSource TemplatedParent}}"/>
+                    <Button x:Name="PrimaryActionButton"
+                            Content="{Binding PrimaryActionText, RelativeSource={RelativeSource TemplatedParent}}"
+                            Style="{StaticResource MaterialFilledButtonStyle}"
+                            Visibility="{Binding PrimaryActionText, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource StringEmptyToVisibilityConverter}}"
+                            Command="{Binding PrimaryCommand, RelativeSource={RelativeSource TemplatedParent}}"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

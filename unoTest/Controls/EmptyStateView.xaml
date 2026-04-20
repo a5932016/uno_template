@@ -1,0 +1,50 @@
+<UserControl x:Class="unoTest.Controls.EmptyStateView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+
+    <!-- ====================================================================
+         空狀態視圖控件
+         用於顯示無資料、錯誤、空搜尋結果等狀態
+         ==================================================================== -->
+
+    <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Padding="32">
+        <StackPanel Spacing="16" HorizontalAlignment="Center">
+            
+            <!-- 圖標 -->
+            <FontIcon x:Name="StateIcon"
+                      Glyph="{Binding Icon, RelativeSource={RelativeSource TemplatedParent}, FallbackValue=&#xE7BA;}"
+                      FontSize="64"
+                      Foreground="{ThemeResource SystemControlForegroundBaseMediumBrush}"
+                      HorizontalAlignment="Center"/>
+
+            <!-- 標題 -->
+            <TextBlock x:Name="TitleText"
+                       Text="{Binding Title, RelativeSource={RelativeSource TemplatedParent}, FallbackValue='沒有資料'}"
+                       Style="{StaticResource SubtitleTextBlockStyle}"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"/>
+
+            <!-- 描述 -->
+            <TextBlock x:Name="DescriptionText"
+                       Text="{Binding Description, RelativeSource={RelativeSource TemplatedParent}}"
+                       Style="{StaticResource BodyTextBlockStyle}"
+                       Opacity="0.7"
+                       HorizontalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       MaxWidth="300"
+                       Visibility="{Binding Description, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource StringEmptyToVisibilityConverter}}"/>
+
+            <!-- 動作按鈕 -->
+            <Button x:Name="ActionButton"
+                    Content="{Binding ActionText, RelativeSource={RelativeSource TemplatedParent}}"
+                    Command="{Binding ActionCommand, RelativeSource={RelativeSource TemplatedParent}}"
+                    Style="{StaticResource MaterialFilledButtonStyle}"
+                    HorizontalAlignment="Center"
+                    Visibility="{Binding ActionText, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource StringEmptyToVisibilityConverter}}"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

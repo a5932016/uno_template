@@ -1,0 +1,152 @@
+<Page x:Class="unoTest.Presentation.DemoIndexPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:unoTest.Presentation"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      Background="{ThemeResource BackgroundBrush}">
+
+    <!-- ====================================================================
+         功能示範索引頁面
+         展示所有可用的模板和功能
+         ==================================================================== -->
+
+    <Grid utu:SafeArea.Insets="VisibleBounds">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 標題列 -->
+        <utu:NavigationBar Content="Uno Platform 功能展示" Grid.Row="0"/>
+
+        <ScrollViewer Grid.Row="1" Padding="16">
+            <StackPanel Spacing="16" MaxWidth="1200" HorizontalAlignment="Center">
+
+                <!-- 歡迎區 -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="12"
+                        Padding="24">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="歡迎使用 Uno Platform 專案模板"
+                                   Style="{StaticResource TitleTextBlockStyle}"/>
+                        <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                            這個專案包含各種常用的 UI 元件和功能模板，幫助你快速開發跨平台應用程式。
+                            點擊下方的卡片來查看各個功能示範。
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+
+                <!-- 功能卡片網格 -->
+                <ItemsRepeater ItemsSource="{Binding DemoItems}">
+                    <ItemsRepeater.Layout>
+                        <UniformGridLayout MinItemWidth="280"
+                                           MinItemHeight="180"
+                                           MinColumnSpacing="16"
+                                           MinRowSpacing="16"
+                                           ItemsStretch="Fill"/>
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate>
+                            <Button HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalContentAlignment="Stretch"
+                                    VerticalContentAlignment="Stretch"
+                                    Padding="0"
+                                    CornerRadius="8"
+                                    Command="{Binding NavigateCommand}">
+                                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        CornerRadius="8"
+                                        Padding="20">
+                                    <Grid>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="*"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+
+                                        <!-- 圖標 -->
+                                        <Border Grid.Row="0"
+                                                Background="{Binding IconBackground}"
+                                                Width="48"
+                                                Height="48"
+                                                CornerRadius="8"
+                                                HorizontalAlignment="Left"
+                                                Margin="0,0,0,12">
+                                            <FontIcon Glyph="{Binding Icon}"
+                                                      FontSize="24"
+                                                      Foreground="White"
+                                                      HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"/>
+                                        </Border>
+
+                                        <!-- 標題與描述 -->
+                                        <StackPanel Grid.Row="1" Spacing="4">
+                                            <TextBlock Text="{Binding Title}"
+                                                       Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                            <TextBlock Text="{Binding Description}"
+                                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                                       Opacity="0.7"
+                                                       TextWrapping="Wrap"
+                                                       MaxLines="2"/>
+                                        </StackPanel>
+
+                                        <!-- 標籤 -->
+                                        <StackPanel Grid.Row="2" 
+                                                    Orientation="Horizontal"
+                                                    Spacing="8"
+                                                    Margin="0,12,0,0">
+                                            <Border Background="{ThemeResource SystemAccentColorLight2}"
+                                                    CornerRadius="4"
+                                                    Padding="8,4"
+                                                    Visibility="{Binding IsNew, Converter={StaticResource BoolToVisibilityConverter}}">
+                                                <TextBlock Text="NEW" FontSize="10" FontWeight="Bold"/>
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+
+                <!-- 快速開始區 -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="12"
+                        Padding="24"
+                        Margin="0,16,0,0">
+                    <StackPanel Spacing="16">
+                        <TextBlock Text="快速開始" Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <Grid ColumnSpacing="16" RowSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="1." FontWeight="Bold"/>
+                            <TextBlock Grid.Row="0" Grid.Column="1" TextWrapping="Wrap">
+                                查看 <Run FontWeight="Bold">頁面布局教學</Run> 了解各種 Layout 技巧
+                            </TextBlock>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="2." FontWeight="Bold"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" TextWrapping="Wrap">
+                                參考 <Run FontWeight="Bold">CRUD 示範</Run> 實作資料管理功能
+                            </TextBlock>
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="3." FontWeight="Bold"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" TextWrapping="Wrap">
+                                在 <Run FontWeight="Bold">Controls/</Run> 資料夾找到可重用的控件模板
+                            </TextBlock>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

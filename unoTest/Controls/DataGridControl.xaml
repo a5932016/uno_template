@@ -1,0 +1,155 @@
+<UserControl x:Class="unoTest.Controls.DataGridControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="400"
+             d:DesignWidth="600">
+
+    <!-- ====================================================================
+         可重複使用的數據表格控件
+         
+         功能說明：
+         1. 表頭排序
+         2. 搜尋過濾
+         3. 分頁功能
+         4. 選擇功能（單選/多選）
+         5. 行操作按鈕
+         ==================================================================== -->
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- 工具列 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 表格內容 -->
+            <RowDefinition Height="*"/>
+            <!-- 分頁控制 -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 工具列 -->
+        <Grid Grid.Row="0" Padding="12" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 搜尋框 -->
+            <TextBox x:Name="SearchBox"
+                     Grid.Column="0"
+                     PlaceholderText="搜尋..."
+                     MaxWidth="300"
+                     HorizontalAlignment="Left"
+                     TextChanged="SearchBox_TextChanged">
+                <TextBox.Header>
+                    <FontIcon Glyph="&#xE721;" FontSize="14"/>
+                </TextBox.Header>
+            </TextBox>
+
+            <!-- 操作按鈕 -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                <Button x:Name="RefreshButton" 
+                        Content="重新整理" 
+                        Click="RefreshButton_Click"/>
+                <Button x:Name="ExportButton" 
+                        Content="匯出" 
+                        Click="ExportButton_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 表格內容 -->
+        <ListView x:Name="DataListView"
+                  Grid.Row="1"
+                  ItemsSource="{Binding ItemsSource, RelativeSource={RelativeSource TemplatedParent}}"
+                  SelectionMode="{Binding SelectionMode, RelativeSource={RelativeSource TemplatedParent}}"
+                  SelectionChanged="DataListView_SelectionChanged">
+            
+            <!-- 表頭 -->
+            <ListView.Header>
+                <Grid x:Name="HeaderGrid"
+                      Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+                      Padding="16,12"
+                      BorderThickness="0,0,0,1"
+                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                    <!-- 表頭內容由 ColumnDefinitions 動態生成 -->
+                </Grid>
+            </ListView.Header>
+
+            <!-- 行模板 -->
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Padding="16,12">
+                        <Grid.ColumnDefinitions>
+                            <!-- 動態生成列 -->
+                        </Grid.ColumnDefinitions>
+                        <!-- 行內容 -->
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Padding" Value="0"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+        </ListView>
+
+        <!-- 分頁控制 -->
+        <Grid Grid.Row="2" 
+              Padding="12" 
+              Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 顯示數量選擇 -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <TextBlock Text="每頁顯示:" VerticalAlignment="Center"/>
+                <ComboBox x:Name="PageSizeComboBox"
+                          SelectedIndex="0"
+                          SelectionChanged="PageSizeComboBox_SelectionChanged">
+                    <ComboBoxItem Content="10"/>
+                    <ComboBoxItem Content="25"/>
+                    <ComboBoxItem Content="50"/>
+                    <ComboBoxItem Content="100"/>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- 頁面資訊 -->
+            <TextBlock Grid.Column="1"
+                       x:Name="PageInfoText"
+                       Text="顯示 1-10 共 100 筆"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Opacity="0.7"/>
+
+            <!-- 分頁按鈕 -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                <Button x:Name="FirstPageButton" 
+                        Content="⏮" 
+                        Click="FirstPageButton_Click"
+                        IsEnabled="{Binding CanGoFirst, RelativeSource={RelativeSource TemplatedParent}}"/>
+                <Button x:Name="PrevPageButton" 
+                        Content="◀" 
+                        Click="PrevPageButton_Click"
+                        IsEnabled="{Binding CanGoPrevious, RelativeSource={RelativeSource TemplatedParent}}"/>
+                <TextBlock x:Name="CurrentPageText" 
+                           Text="1 / 10" 
+                           VerticalAlignment="Center"
+                           Margin="8,0"/>
+                <Button x:Name="NextPageButton" 
+                        Content="▶" 
+                        Click="NextPageButton_Click"
+                        IsEnabled="{Binding CanGoNext, RelativeSource={RelativeSource TemplatedParent}}"/>
+                <Button x:Name="LastPageButton" 
+                        Content="⏭" 
+                        Click="LastPageButton_Click"
+                        IsEnabled="{Binding CanGoLast, RelativeSource={RelativeSource TemplatedParent}}"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

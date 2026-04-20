@@ -1,0 +1,313 @@
+<Page x:Class="unoTest.Presentation.LayoutDemoPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:unoTest.Presentation"
+      xmlns:controls="using:unoTest.Controls"
+      xmlns:uen="using:Uno.Extensions.Navigation.UI"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      xmlns:um="using:Uno.Material"
+      NavigationCacheMode="Required"
+      Background="{ThemeResource BackgroundBrush}">
+
+    <!-- ====================================================================
+         頁面布局教學 - 展示各種常用 Layout 技巧
+         ==================================================================== -->
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- 標題列 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 內容區域 -->
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 自訂標題列 -->
+        <utu:NavigationBar Content="頁面布局教學" Grid.Row="0"/>
+
+        <ScrollViewer Grid.Row="1" Padding="16">
+            <StackPanel Spacing="24">
+
+                <!-- ============================================
+                     Section 1: Grid 布局
+                     ============================================ -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="1. Grid 布局 - 最常用的容器"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                            Grid 是最靈活的布局容器，可以定義行和列，支援跨行跨列。
+                        </TextBlock>
+
+                        <!-- Grid 示範 -->
+                        <Grid Height="200" 
+                              Background="{ThemeResource SystemControlBackgroundListMediumBrush}"
+                              RowSpacing="4"
+                              ColumnSpacing="4">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                                <RowDefinition Height="2*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Row="0" Grid.Column="0" Background="#FF6B6B" Padding="8">
+                                <TextBlock Text="Auto Height" TextAlignment="Center"/>
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="1" Background="#4ECDC4" Padding="8">
+                                <TextBlock Text="* Width (彈性)" TextAlignment="Center"/>
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="2" Background="#45B7D1" Padding="8">
+                                <TextBlock Text="Auto Width" TextAlignment="Center"/>
+                            </Border>
+                            <Border Grid.Row="1" Grid.ColumnSpan="3" Background="#96CEB4" Padding="8">
+                                <TextBlock Text="Grid.ColumnSpan=3 (跨3列) | Height=*" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <Border Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Background="#FFEAA7" Padding="8">
+                                <TextBlock Text="Height=2* (2倍高度)" 
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <Border Grid.Row="2" Grid.Column="2" Background="#DDA0DD" Padding="8">
+                                <TextBlock Text="Cell" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============================================
+                     Section 2: StackPanel 布局
+                     ============================================ -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="2. StackPanel 布局 - 線性排列"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                            StackPanel 會將子元素按順序排列，支援垂直或水平方向。
+                        </TextBlock>
+
+                        <Grid ColumnSpacing="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 垂直 StackPanel -->
+                            <StackPanel Grid.Column="0" 
+                                        Orientation="Vertical" 
+                                        Spacing="4"
+                                        Background="{ThemeResource SystemControlBackgroundListMediumBrush}"
+                                        Padding="8">
+                                <TextBlock Text="Vertical" FontWeight="Bold"/>
+                                <Button Content="按鈕 1" HorizontalAlignment="Stretch"/>
+                                <Button Content="按鈕 2" HorizontalAlignment="Stretch"/>
+                                <Button Content="按鈕 3" HorizontalAlignment="Stretch"/>
+                            </StackPanel>
+
+                            <!-- 水平 StackPanel -->
+                            <StackPanel Grid.Column="1" 
+                                        Orientation="Horizontal" 
+                                        Spacing="4"
+                                        Background="{ThemeResource SystemControlBackgroundListMediumBrush}"
+                                        Padding="8">
+                                <TextBlock Text="H" FontWeight="Bold" VerticalAlignment="Center"/>
+                                <Button Content="1"/>
+                                <Button Content="2"/>
+                                <Button Content="3"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============================================
+                     Section 3: WrapPanel / ItemsRepeater
+                     ============================================ -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="3. 響應式布局 - FlexLayout / WrapPanel 效果"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                            使用 ItemsRepeater 配合 UniformGridLayout 實現類似 FlexBox 的效果。
+                        </TextBlock>
+
+                        <ItemsRepeater ItemsSource="{Binding DemoItems}">
+                            <ItemsRepeater.Layout>
+                                <UniformGridLayout MinItemWidth="120"
+                                                   MinItemHeight="80"
+                                                   MinColumnSpacing="8"
+                                                   MinRowSpacing="8"
+                                                   ItemsStretch="Fill"/>
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="{ThemeResource SystemAccentColor}"
+                                            CornerRadius="4"
+                                            Padding="12">
+                                        <TextBlock Text="{Binding}"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============================================
+                     Section 4: 三欄式布局（常用於後台管理）
+                     ============================================ -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="4. 三欄式布局 - 後台管理常用"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        
+                        <Grid Height="200" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <!-- 左側選單 - 固定寬度 -->
+                                <ColumnDefinition Width="180"/>
+                                <!-- 中間內容 - 彈性寬度 -->
+                                <ColumnDefinition Width="*"/>
+                                <!-- 右側面板 - 條件顯示 -->
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- 左側選單 -->
+                            <Border Grid.Column="0" 
+                                    Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+                                    CornerRadius="4"
+                                    Padding="8">
+                                <StackPanel Spacing="4">
+                                    <TextBlock Text="🏠 首頁" Padding="8,4"/>
+                                    <TextBlock Text="📊 數據分析" Padding="8,4"/>
+                                    <TextBlock Text="👤 用戶管理" Padding="8,4"/>
+                                    <TextBlock Text="⚙️ 系統設定" Padding="8,4"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 中間內容 -->
+                            <Border Grid.Column="1" 
+                                    Background="{ThemeResource SystemControlBackgroundListMediumBrush}"
+                                    CornerRadius="4"
+                                    Padding="16">
+                                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                    <TextBlock Text="主要內容區域" 
+                                               Style="{StaticResource TitleTextBlockStyle}"/>
+                                    <TextBlock Text="Width=* 會自動填滿剩餘空間" 
+                                               Opacity="0.7"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 右側面板 -->
+                            <Border Grid.Column="2" 
+                                    Width="150"
+                                    Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+                                    CornerRadius="4"
+                                    Padding="8">
+                                <StackPanel>
+                                    <TextBlock Text="詳細資訊" FontWeight="Bold" Margin="0,0,0,8"/>
+                                    <TextBlock Text="選中項目的" TextWrapping="Wrap"/>
+                                    <TextBlock Text="相關資訊顯示" TextWrapping="Wrap"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============================================
+                     Section 5: 響應式設計 (VisualStateManager)
+                     ============================================ -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="5. 響應式設計 - VisualStateManager"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                            使用 AdaptiveTrigger 根據視窗寬度自動切換布局。
+                        </TextBlock>
+
+                        <Grid x:Name="ResponsiveDemo" 
+                              Height="150"
+                              Background="{ThemeResource SystemControlBackgroundListMediumBrush}"
+                              Padding="16">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup>
+                                    <VisualState x:Name="WideState">
+                                        <VisualState.StateTriggers>
+                                            <AdaptiveTrigger MinWindowWidth="800"/>
+                                        </VisualState.StateTriggers>
+                                        <VisualState.Setters>
+                                            <Setter Target="ResponsivePanel.Orientation" Value="Horizontal"/>
+                                            <Setter Target="ResponsiveText.Text" Value="寬螢幕模式 (>800px) - 水平排列"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="NarrowState">
+                                        <VisualState.StateTriggers>
+                                            <AdaptiveTrigger MinWindowWidth="0"/>
+                                        </VisualState.StateTriggers>
+                                        <VisualState.Setters>
+                                            <Setter Target="ResponsivePanel.Orientation" Value="Vertical"/>
+                                            <Setter Target="ResponsiveText.Text" Value="窄螢幕模式 (&lt;800px) - 垂直排列"/>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <StackPanel x:Name="ResponsivePanel" Spacing="8">
+                                <TextBlock x:Name="ResponsiveText" 
+                                           FontWeight="Bold" 
+                                           Foreground="{ThemeResource SystemAccentColor}"/>
+                                <Button Content="項目 A"/>
+                                <Button Content="項目 B"/>
+                                <Button Content="項目 C"/>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- ============================================
+                     Section 6: ScrollViewer 與 SafeArea
+                     ============================================ -->
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8"
+                        Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="6. ScrollViewer 與 SafeArea"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                            使用 SafeArea 處理 iPhone 瀏海或 Android 虛擬按鍵區域。
+                        </TextBlock>
+
+                        <Border Height="150"
+                                Background="{ThemeResource SystemControlBackgroundListMediumBrush}"
+                                CornerRadius="4">
+                            <ScrollViewer>
+                                <StackPanel utu:SafeArea.Insets="VisibleBounds" Padding="16">
+                                    <TextBlock Text="這是可捲動的內容區域"/>
+                                    <TextBlock Text="使用 utu:SafeArea.Insets 處理安全區域"/>
+                                    <TextBlock Text="• VisibleBounds - 避開系統 UI"/>
+                                    <TextBlock Text="• Left/Top/Right/Bottom - 單邊設定"/>
+                                    <TextBlock Text="• All - 全部方向"/>
+                                    <Rectangle Height="100" Fill="{ThemeResource SystemAccentColor}" Margin="0,16,0,0"/>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

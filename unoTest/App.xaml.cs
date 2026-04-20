@@ -75,8 +75,9 @@ public partial class App : Application
                 })
                 .ConfigureServices((context, services) =>
                 {
-                    // TODO: Register your services
-                    //services.AddSingleton<IMyService, MyService>();
+                    // 註冊服務
+                    services.AddSingleton<IAuthService, MockAuthService>();
+                    services.AddSingleton<IProductService, MockProductService>();
                 })
                 .UseNavigation(RegisterRoutes)
             );
@@ -95,15 +96,28 @@ public partial class App : Application
         views.Register(
             new ViewMap(ViewModel: typeof(ShellViewModel)),
             new ViewMap<MainPage, MainViewModel>(),
-            new DataViewMap<SecondPage, SecondViewModel, Entity>()
+            new DataViewMap<SecondPage, SecondViewModel, Entity>(),
+            // 新增頁面註冊
+            new ViewMap<DemoIndexPage, DemoIndexViewModel>(),
+            new ViewMap<LoginPage, LoginViewModel>(),
+            new ViewMap<LayoutDemoPage, LayoutDemoViewModel>(),
+            new ViewMap<CrudDemoPage, CrudDemoViewModel>(),
+            new ViewMap<NodeLinkDemoPage>(),
+            new ViewMap<SettingsPage, SettingsViewModel>()
         );
 
         routes.Register(
             new RouteMap("", View: views.FindByViewModel<ShellViewModel>(),
                 Nested:
                 [
-                    new ("Main", View: views.FindByViewModel<MainViewModel>(), IsDefault:true),
+                    new ("DemoIndex", View: views.FindByViewModel<DemoIndexViewModel>(), IsDefault:true),
+                    new ("Main", View: views.FindByViewModel<MainViewModel>()),
                     new ("Second", View: views.FindByViewModel<SecondViewModel>()),
+                    new ("Login", View: views.FindByViewModel<LoginViewModel>()),
+                    new ("LayoutDemo", View: views.FindByViewModel<LayoutDemoViewModel>()),
+                    new ("CrudDemo", View: views.FindByViewModel<CrudDemoViewModel>()),
+                    new ("NodeLinkDemo", View: views.FindByView<NodeLinkDemoPage>()),
+                    new ("Settings", View: views.FindByViewModel<SettingsViewModel>()),
                 ]
             )
         );
