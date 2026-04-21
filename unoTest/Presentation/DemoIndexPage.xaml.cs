@@ -60,7 +60,10 @@ public partial class DemoIndexViewModel : ObservableObject
                 Windows.UI.Color.FromArgb(255, 107, 114, 128), "Settings", false, NavigateTo),
             
             new DemoItem("主頁面", "原始的主頁面範例與導航", "\uE80F", 
-                Windows.UI.Color.FromArgb(255, 59, 130, 246), "Main", false, NavigateTo)
+                Windows.UI.Color.FromArgb(255, 59, 130, 246), "Main", false, NavigateTo),
+            
+            new DemoItem("TitleBar 標題列", "自訂標題列控件，支援導航、使用者、主題切換與視窗控制", "\uE8A5",
+                Windows.UI.Color.FromArgb(255, 14, 165, 233), "TitleBarDemo", true, NavigateTo)
         };
     }
     

@@ -1,0 +1,458 @@
+<Page x:Class="unoTest.Presentation.TitleBarDemoPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:controls="using:unoTest.Controls"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      Background="{ThemeResource BackgroundBrush}">
+
+    <!-- ====================================================================
+         TitleBar 標題列示範頁面
+         展示 CustomTitleBar 控件的各種使用方式與屬性設定
+         ==================================================================== -->
+
+    <Grid utu:SafeArea.Insets="VisibleBounds">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 標題列 -->
+        <utu:NavigationBar Content="TitleBar 標題列示範" Grid.Row="0"/>
+
+        <Pivot Grid.Row="1">
+
+            <!-- ==================== 預覽 ==================== -->
+            <PivotItem Header="控件預覽">
+                <ScrollViewer Padding="16">
+                    <StackPanel Spacing="24" MaxWidth="900" HorizontalAlignment="Left">
+
+                        <!-- 說明 -->
+                        <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                            CustomTitleBar 是一個完整的自訂標題列控件，支援圖標、導航、使用者資訊、主題切換與視窗控制按鈕。
+                            調整下方設定，可即時預覽效果。
+                        </TextBlock>
+
+                        <!-- ---- 預覽容器 ---- -->
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8"
+                                Padding="0"
+                                ClipToBounds="True">
+                            <StackPanel>
+                                <TextBlock Text="即時預覽"
+                                           Style="{StaticResource SubtitleTextBlockStyle}"
+                                           Margin="16,16,16,8"/>
+                                <TextBlock Text="以下是 CustomTitleBar 的實際外觀"
+                                           Style="{StaticResource CaptionTextBlockStyle}"
+                                           Opacity="0.7"
+                                           Margin="16,0,16,12"/>
+
+                                <!-- CustomTitleBar 預覽 -->
+                                <Border CornerRadius="0"
+                                        BorderThickness="0,1,0,0"
+                                        BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <controls:CustomTitleBar x:Name="PreviewTitleBar"/>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ---- 屬性控制面板 ---- -->
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8"
+                                Padding="16">
+                            <StackPanel Spacing="16">
+                                <TextBlock Text="調整屬性" Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                                <!-- 文字輸入 -->
+                                <Grid ColumnSpacing="16" RowSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
+                                        <TextBlock Text="標題文字 (Title)"
+                                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                                   Opacity="0.7"/>
+                                        <TextBox x:Name="TitleTextBox"
+                                                 PlaceholderText="輸入標題文字"
+                                                 Text="Uno Platform App"
+                                                 TextChanged="TitleTextBox_TextChanged"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4">
+                                        <TextBlock Text="使用者名稱 (UserName)"
+                                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                                   Opacity="0.7"/>
+                                        <TextBox x:Name="UserNameTextBox"
+                                                 PlaceholderText="輸入使用者名稱"
+                                                 Text="訪客"
+                                                 TextChanged="UserNameTextBox_TextChanged"/>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
+                                        <TextBlock Text="通知數量 (NotificationCount)"
+                                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                                   Opacity="0.7"/>
+                                        <Slider x:Name="NotificationSlider"
+                                                Minimum="0"
+                                                Maximum="10"
+                                                StepFrequency="1"
+                                                Value="0"
+                                                ValueChanged="NotificationSlider_ValueChanged"/>
+                                        <TextBlock x:Name="NotificationCountText" Text="0 則通知"
+                                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                                   Opacity="0.6"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- 開關控制 -->
+                                <ToggleSwitch x:Name="CanGoBackToggle"
+                                              Header="顯示返回按鈕 (CanGoBack)"
+                                              IsOn="True"
+                                              Toggled="CanGoBackToggle_Toggled"/>
+
+                                <ToggleSwitch x:Name="ShowUserNameToggle"
+                                              Header="顯示使用者名稱 (ShowUserName)"
+                                              IsOn="True"
+                                              Toggled="ShowUserNameToggle_Toggled"/>
+
+                                <ToggleSwitch x:Name="ShowWindowControlsToggle"
+                                              Header="顯示視窗控制按鈕 (ShowWindowControls) — Desktop Only"
+                                              IsOn="True"
+                                              Toggled="ShowWindowControlsToggle_Toggled"/>
+
+                                <ToggleSwitch x:Name="HasNotificationsToggle"
+                                              Header="顯示通知紅點 (HasNotifications)"
+                                              IsOn="False"
+                                              Toggled="HasNotificationsToggle_Toggled"/>
+
+                                <ToggleSwitch x:Name="DarkThemeToggle"
+                                              Header="深色主題 (IsDarkTheme)"
+                                              IsOn="False"
+                                              Toggled="DarkThemeToggle_Toggled"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+
+            <!-- ==================== 屬性說明 ==================== -->
+            <PivotItem Header="屬性說明">
+                <ScrollViewer Padding="16">
+                    <StackPanel Spacing="20" MaxWidth="900" HorizontalAlignment="Left">
+
+                        <!-- DependencyProperties -->
+                        <TextBlock Text="DependencyProperties" Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8"
+                                Padding="0"
+                                ClipToBounds="True">
+                            <StackPanel>
+                                <!-- Header Row -->
+                                <Grid Background="{ThemeResource SystemControlBackgroundListMediumBrush}"
+                                      Padding="16,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="屬性名稱" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="型別" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="2" Text="說明" FontWeight="SemiBold"/>
+                                </Grid>
+
+                                <!-- Title -->
+                                <Grid Padding="16,12"
+                                      BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="Title" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="string" Opacity="0.6" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="2" Text="標題列顯示的文字，預設為 'Uno Platform App'" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <!-- ShowBackButton -->
+                                <Grid Padding="16,12"
+                                      BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="ShowBackButton" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="bool" Opacity="0.6" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="2" Text="是否顯示返回按鈕，預設 true" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <!-- ShowWindowControls -->
+                                <Grid Padding="16,12"
+                                      BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="ShowWindowControls" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="bool" Opacity="0.6" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="2" Text="是否顯示最小化/最大化/關閉按鈕（僅 Desktop），預設 true" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <!-- ShowUserName -->
+                                <Grid Padding="16,12"
+                                      BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="ShowUserName" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="bool" Opacity="0.6" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="2" Text="是否在使用者頭像旁顯示名稱，預設 true" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <!-- TitleBarHeight -->
+                                <Grid Padding="16,12"
+                                      BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="180"/>
+                                        <ColumnDefinition Width="100"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="TitleBarHeight" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="double" Opacity="0.6" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="2" Text="標題列高度（px），預設 48.0" TextWrapping="Wrap"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Events -->
+                        <TextBlock Text="事件 Events" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,0"/>
+
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8"
+                                Padding="0"
+                                ClipToBounds="True">
+                            <StackPanel>
+                                <Grid Background="{ThemeResource SystemControlBackgroundListMediumBrush}"
+                                      Padding="16,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="事件名稱" FontWeight="SemiBold"/>
+                                    <TextBlock Grid.Column="1" Text="說明" FontWeight="SemiBold"/>
+                                </Grid>
+
+                                <Grid Padding="16,12" BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="BackRequested" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="使用者點擊返回按鈕時觸發" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <Grid Padding="16,12" BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="HomeRequested" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="使用者點擊首頁按鈕時觸發" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <Grid Padding="16,12" BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="RefreshRequested" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="使用者點擊重新整理按鈕時觸發" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <Grid Padding="16,12" BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="SearchRequested" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="使用者點擊搜尋按鈕時觸發" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <Grid Padding="16,12" BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="SettingsRequested" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="使用者點擊設定按鈕時觸發" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <Grid Padding="16,12" BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="ThemeToggleRequested" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="使用者點擊主題切換按鈕時觸發" TextWrapping="Wrap"/>
+                                </Grid>
+
+                                <Grid Padding="16,12" BorderThickness="0,1,0,0"
+                                      BorderBrush="{ThemeResource SystemControlForegroundBaseMediumLowBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="220"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="LogoutRequested" FontFamily="Consolas"/>
+                                    <TextBlock Grid.Column="1" Text="使用者點擊登出時觸發" TextWrapping="Wrap"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- ViewModel 說明 -->
+                        <TextBlock Text="TitleBarViewModel" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,0"/>
+
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8"
+                                Padding="16">
+                            <StackPanel Spacing="8">
+                                <TextBlock TextWrapping="Wrap">
+                                    <Run FontWeight="SemiBold">TitleBarViewModel</Run>
+                                    <Run> 提供標題列完整的業務邏輯，包含：</Run>
+                                </TextBlock>
+                                <TextBlock Text="• Title — 標題文字" Margin="16,0,0,0"/>
+                                <TextBlock Text="• UserName / UserAvatar — 使用者資訊" Margin="16,0,0,0"/>
+                                <TextBlock Text="• HasNotifications / NotificationCount — 通知狀態" Margin="16,0,0,0"/>
+                                <TextBlock Text="• IsDarkTheme — 目前主題" Margin="16,0,0,0"/>
+                                <TextBlock Text="• CanGoBack — 返回按鈕啟用狀態" Margin="16,0,0,0"/>
+                                <TextBlock Text="• BackCommand / HomeCommand / RefreshCommand … — 導航指令" Margin="16,0,0,0"/>
+                                <TextBlock TextWrapping="Wrap" Opacity="0.7" Margin="0,8,0,0">
+                                    需要在 DI 中注入 INavigator，並透過 SetDataContext 或直接將其設為 CustomTitleBar 的 DataContext 以啟用指令功能。
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+
+            <!-- ==================== 使用方式 ==================== -->
+            <PivotItem Header="使用方式">
+                <ScrollViewer Padding="16">
+                    <StackPanel Spacing="24" MaxWidth="900" HorizontalAlignment="Left">
+
+                        <!-- Step 1: XAML 使用 -->
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8"
+                                Padding="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="步驟 1：在 XAML 中加入控件" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                                    在頁面最上方加入 CustomTitleBar，並透過 DependencyProperty 設定外觀。
+                                </TextBlock>
+                                <Border Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+                                        CornerRadius="6"
+                                        Padding="12">
+                                    <TextBlock FontFamily="Consolas"
+                                               FontSize="12"
+                                               TextWrapping="Wrap"
+                                               IsTextSelectionEnabled="True">
+&lt;!-- 1. 在頁面加入 xmlns:controls --&gt;&#10;&lt;Page xmlns:controls="using:YourApp.Controls" ...&gt;&#10;&#10;&lt;!-- 2. 在 Grid 的第一行放置 CustomTitleBar --&gt;&#10;&lt;controls:CustomTitleBar&#10;    x:Name="TitleBar"&#10;    Title="我的應用程式"&#10;    ShowBackButton="True"&#10;    ShowWindowControls="True"&#10;    ShowUserName="True"&#10;    TitleBarHeight="48"/&gt;
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Step 2: ViewModel 綁定 -->
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8"
+                                Padding="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="步驟 2：設定 DataContext (TitleBarViewModel)" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                                    將 TitleBarViewModel 設為 CustomTitleBar 的 DataContext，以啟用指令與資料綁定。
+                                </TextBlock>
+                                <Border Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+                                        CornerRadius="6"
+                                        Padding="12">
+                                    <TextBlock FontFamily="Consolas"
+                                               FontSize="12"
+                                               TextWrapping="Wrap"
+                                               IsTextSelectionEnabled="True">
+// 在 Code-behind 或其他 ViewModel 中：&#10;&#10;// 從 DI 取得 TitleBarViewModel&#10;var titleBarVm = serviceProvider.GetRequiredService&lt;TitleBarViewModel&gt;();&#10;&#10;// 設定為 CustomTitleBar 的 DataContext&#10;TitleBar.DataContext = titleBarVm;&#10;&#10;// 更新使用者資訊&#10;titleBarVm.UpdateUserInfo("王小明", avatarUrl: null);&#10;&#10;// 設定通知數量&#10;titleBarVm.SetNotifications(count: 3);&#10;&#10;// 設定父視窗（用於視窗控制按鈕）&#10;TitleBar.SetParentWindow(this.GetWindow());
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Step 3: 監聽事件 -->
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8"
+                                Padding="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="步驟 3：監聽事件（可選）" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                                    如果不使用 TitleBarViewModel，可以直接監聽 CustomTitleBar 的事件來處理互動。
+                                </TextBlock>
+                                <Border Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+                                        CornerRadius="6"
+                                        Padding="12">
+                                    <TextBlock FontFamily="Consolas"
+                                               FontSize="12"
+                                               TextWrapping="Wrap"
+                                               IsTextSelectionEnabled="True">
+// XAML 中加入事件處理器&#10;&lt;controls:CustomTitleBar&#10;    BackRequested="TitleBar_BackRequested"&#10;    SettingsRequested="TitleBar_SettingsRequested"&#10;    ThemeToggleRequested="TitleBar_ThemeToggleRequested"&#10;    LogoutRequested="TitleBar_LogoutRequested"/&gt;&#10;&#10;// Code-behind&#10;private void TitleBar_BackRequested(object sender, EventArgs e)&#10;{&#10;    Frame.GoBack();&#10;}&#10;&#10;private void TitleBar_SettingsRequested(object sender, EventArgs e)&#10;{&#10;    Frame.Navigate(typeof(SettingsPage));&#10;}
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Step 4: Shell 整合 -->
+                        <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                CornerRadius="8"
+                                Padding="16">
+                            <StackPanel Spacing="12">
+                                <TextBlock Text="最佳實踐：在 Shell 中整合" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                                <TextBlock TextWrapping="Wrap" Opacity="0.7">
+                                    建議將 CustomTitleBar 放置在 Shell（主視窗容器）而非每個頁面中，讓所有頁面共用同一個標題列。
+                                </TextBlock>
+                                <Border Background="{ThemeResource SystemControlBackgroundChromeMediumBrush}"
+                                        CornerRadius="6"
+                                        Padding="12">
+                                    <TextBlock FontFamily="Consolas"
+                                               FontSize="12"
+                                               TextWrapping="Wrap"
+                                               IsTextSelectionEnabled="True">
+&lt;!-- Shell.xaml --&gt;&#10;&lt;Grid&gt;&#10;    &lt;Grid.RowDefinitions&gt;&#10;        &lt;RowDefinition Height="Auto"/&gt;&#10;        &lt;RowDefinition Height="*"/&gt;&#10;    &lt;/Grid.RowDefinitions&gt;&#10;&#10;    &lt;controls:CustomTitleBar x:Name="AppTitleBar" Grid.Row="0"/&gt;&#10;    &lt;Frame x:Name="ContentFrame" Grid.Row="1"/&gt;&#10;&lt;/Grid&gt;
+                                    </TextBlock>
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </PivotItem>
+
+        </Pivot>
+    </Grid>
+</Page>
