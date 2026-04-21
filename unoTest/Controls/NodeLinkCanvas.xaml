@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             x:Name="RootControl"
              mc:Ignorable="d"
              d:DesignHeight="600"
              d:DesignWidth="800">
@@ -18,11 +19,11 @@
          5. 可自訂節點樣式和連線樣式
          ==================================================================== -->
 
-    <Grid>
+    <Grid SizeChanged="CanvasHost_SizeChanged">
         <!-- 背景格線（可選） -->
         <Canvas x:Name="GridCanvas" 
                 Background="Transparent"
-                Visibility="{Binding ShowGrid, RelativeSource={RelativeSource TemplatedParent}, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                Visibility="{x:Bind ShowGrid, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}"/>
 
         <!-- 連線層（在節點下方） -->
         <Canvas x:Name="LinkCanvas" Background="Transparent"/>
@@ -43,19 +44,19 @@
             
             <Button x:Name="AddNodeButton"
                     ToolTipService.ToolTip="新增節點"
-                    Click="AddNodeButton_Click">
+                    Command="{x:Bind ViewModel.AddNodeCommand, Mode=OneWay}">
                 <FontIcon Glyph="&#xE710;" FontSize="16"/>
             </Button>
             
             <Button x:Name="AddLinkButton"
                     ToolTipService.ToolTip="新增連線（先選擇起點節點）"
-                    Click="AddLinkButton_Click">
+                    Command="{x:Bind ViewModel.StartAddLinkCommand, Mode=OneWay}">
                 <FontIcon Glyph="&#xE71B;" FontSize="16"/>
             </Button>
             
             <Button x:Name="DeleteButton"
                     ToolTipService.ToolTip="刪除選中項目"
-                    Click="DeleteButton_Click">
+                    Command="{x:Bind ViewModel.DeleteSelectionCommand, Mode=OneWay}">
                 <FontIcon Glyph="&#xE74D;" FontSize="16"/>
             </Button>
             
@@ -63,13 +64,13 @@
             
             <Button x:Name="ClearAllButton"
                     ToolTipService.ToolTip="清除全部"
-                    Click="ClearAllButton_Click">
+                    Command="{x:Bind ViewModel.ClearCommand, Mode=OneWay}">
                 <FontIcon Glyph="&#xE894;" FontSize="16"/>
             </Button>
             
             <Button x:Name="AutoLayoutButton"
                     ToolTipService.ToolTip="自動排列"
-                    Click="AutoLayoutButton_Click">
+                    Command="{x:Bind ViewModel.AutoLayoutCommand, Mode=OneWay}">
                 <FontIcon Glyph="&#xE8C8;" FontSize="16"/>
             </Button>
         </StackPanel>
@@ -83,7 +84,7 @@
                 CornerRadius="4"
                 Padding="12,6">
             <TextBlock x:Name="StatusText" 
-                       Text="拖曳節點移動位置，點擊「新增連線」後依序選擇起點和終點"
+                       Text="{x:Bind ViewModel.StatusText, Mode=OneWay}"
                        Opacity="0.7"
                        FontSize="12"/>
         </Border>

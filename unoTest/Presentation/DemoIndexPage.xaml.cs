@@ -38,8 +38,11 @@ public partial class DemoIndexViewModel : ObservableObject
             new DemoItem("CRUD 示範", "產品管理的增刪改查、搜尋、分頁功能完整示範", "\uE8A5", 
                 Windows.UI.Color.FromArgb(255, 245, 158, 11), "CrudDemo", false, NavigateTo),
             
-            new DemoItem("節點連線", "Button 之間用線條連接的互動式流程圖畫布", "\uE71B", 
+            new DemoItem("節點連線", "MVVM + SQLite 的節點流程圖畫布，展示 View 與業務邏輯切割", "\uE71B", 
                 Windows.UI.Color.FromArgb(255, 139, 92, 246), "NodeLinkDemo", false, NavigateTo),
+
+            new DemoItem("流程模板編輯器", "重用同一個 NodeLinkCanvas 控件於第二個 Page", "\uE7C3", 
+                Windows.UI.Color.FromArgb(255, 14, 165, 233), "NodeLinkTemplate", true, NavigateTo),
             
             new DemoItem("圖片庫", "圖片瀏覽、上傳、預覽、全螢幕檢視功能", "\uE8B9", 
                 Windows.UI.Color.FromArgb(255, 236, 72, 153), "ImageGallery", true, NavigateTo),

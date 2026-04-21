@@ -2,6 +2,13 @@
   <ItemGroup>
     <ProjectReference Include="..\..\MVVM-Samples\samples\MvvmSample.Core\MvvmSample.Core.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Condition="'$(TargetFramework)' != 'net9.0-browserwasm'" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-browserwasm'">
+    <Compile Remove="Services\SqliteDbConnectionFactory.cs" />
+    <Compile Remove="Services\SqliteNodeGraphRepository.cs" />
+  </ItemGroup>
   <PropertyGroup>
     <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-browserwasm;net9.0-desktop</TargetFrameworks>
 

@@ -78,6 +78,12 @@ public partial class App : Application
                     // 註冊服務
                     services.AddSingleton<IAuthService, MockAuthService>();
                     services.AddSingleton<IProductService, MockProductService>();
+#if __WASM__
+                    services.AddSingleton<INodeGraphRepository, InMemoryNodeGraphRepository>();
+#else
+                    services.AddSingleton<ISqliteDbConnectionFactory, SqliteDbConnectionFactory>();
+                    services.AddSingleton<INodeGraphRepository, SqliteNodeGraphRepository>();
+#endif
                 })
                 .UseNavigation(RegisterRoutes)
             );
@@ -102,7 +108,8 @@ public partial class App : Application
             new ViewMap<LoginPage, LoginViewModel>(),
             new ViewMap<LayoutDemoPage, LayoutDemoViewModel>(),
             new ViewMap<CrudDemoPage, CrudDemoViewModel>(),
-            new ViewMap<NodeLinkDemoPage>(),
+            new ViewMap<NodeLinkDemoPage, NodeLinkDemoViewModel>(),
+            new ViewMap<NodeLinkTemplatePage, NodeLinkTemplateViewModel>(),
             new ViewMap<SettingsPage, SettingsViewModel>(),
             // 新功能頁面
             new ViewMap<ImageGalleryPage>(),
@@ -122,7 +129,8 @@ public partial class App : Application
                     new ("Login", View: views.FindByViewModel<LoginViewModel>()),
                     new ("LayoutDemo", View: views.FindByViewModel<LayoutDemoViewModel>()),
                     new ("CrudDemo", View: views.FindByViewModel<CrudDemoViewModel>()),
-                    new ("NodeLinkDemo", View: views.FindByView<NodeLinkDemoPage>()),
+                    new ("NodeLinkDemo", View: views.FindByViewModel<NodeLinkDemoViewModel>()),
+                    new ("NodeLinkTemplate", View: views.FindByViewModel<NodeLinkTemplateViewModel>()),
                     new ("Settings", View: views.FindByViewModel<SettingsViewModel>()),
                     // 新功能路由
                     new ("ImageGallery", View: views.FindByView<ImageGalleryPage>()),

@@ -3,9 +3,9 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace unoTest.Presentation;
 
-public sealed partial class NodeLinkDemoPage : Page
+public sealed partial class NodeLinkTemplatePage : Page
 {
-    public NodeLinkDemoPage()
+    public NodeLinkTemplatePage()
     {
         this.InitializeComponent();
         this.Loaded += OnPageLoaded;
