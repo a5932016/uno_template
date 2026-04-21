@@ -27,6 +27,7 @@
       <converters:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter"/>
       <converters:StringEmptyToVisibilityConverter x:Key="StringEmptyToVisibilityConverter"/>
       <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+      <converters:ThemeIconConverter x:Key="ThemeIconConverter"/>
 
       <!-- Material Icon Button Style -->
       <Style x:Key="MaterialIconButtonStyle" TargetType="Button">

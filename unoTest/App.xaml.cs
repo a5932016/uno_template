@@ -109,7 +109,8 @@ public partial class App : Application
             new ViewMap<LinkedListDemoPage>(),
             new ViewMap<TabDemoPage>(),
             new ViewMap<DialogDemoPage>(),
-            new ViewMap<LocalizationDemoPage>()
+            new ViewMap<LocalizationDemoPage>(),
+            new ViewMap<TitleBarDemoPage>()
         );
 
         routes.Register(
@@ -130,6 +131,7 @@ public partial class App : Application
                     new ("TabDemo", View: views.FindByView<TabDemoPage>()),
                     new ("DialogDemo", View: views.FindByView<DialogDemoPage>()),
                     new ("LocalizationDemo", View: views.FindByView<LocalizationDemoPage>()),
+                    new ("TitleBarDemo", View: views.FindByView<TitleBarDemoPage>()),
                 ]
             )
         );
