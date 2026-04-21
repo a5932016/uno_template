@@ -1,0 +1,96 @@
+<UserControl x:Class="unoTest.Controls.LinkedButtonControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:unoTest.Controls">
+
+    <!-- ====================================================================
+         Button 連線控件
+         在 Button 項目之間繪製連接線
+         ==================================================================== -->
+
+    <Grid x:Name="RootGrid">
+        <!-- 連線層 (在按鈕下方) -->
+        <Canvas x:Name="LinkCanvas"
+                IsHitTestVisible="False"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"/>
+
+        <!-- 按鈕層 -->
+        <ListView x:Name="ButtonsListView"
+                  Background="Transparent"
+                  SelectionMode="None">
+            <ListView.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapGrid Orientation="Horizontal" MaximumRowsOrColumns="10"/>
+                </ItemsPanelTemplate>
+            </ListView.ItemsPanel>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="8,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 連接點 (左側) -->
+                        <Ellipse x:Name="LeftConnector"
+                                 Grid.Column="0"
+                                 Width="12" Height="12"
+                                 Fill="{ThemeResource SystemAccentColor}"
+                                 Stroke="{ThemeResource SystemAccentColorLight1}"
+                                 StrokeThickness="2"
+                                 Margin="0,0,4,0"
+                                 VerticalAlignment="Center"
+                                 PointerPressed="Connector_PointerPressed"
+                                 Tag="Left"/>
+
+                        <!-- 主要按鈕 -->
+                        <Button Grid.Column="1"
+                                VerticalAlignment="Center"
+                                MinWidth="80"
+                                Click="ButtonItem_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="{Binding Icon}"
+                                          FontSize="14"
+                                          VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Label}"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Button>
+
+                        <!-- 選項按鈕 -->
+                        <Button Grid.Column="2"
+                                Content="&#xE712;"
+                                FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                Background="Transparent"
+                                Padding="8"
+                                VerticalAlignment="Center">
+                            <Button.Flyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="連接到..." Click="LinkTo_Click"/>
+                                    <MenuFlyoutItem Text="取消連接" Click="Unlink_Click"/>
+                                    <MenuFlyoutSeparator/>
+                                    <MenuFlyoutItem Text="刪除" Click="Delete_Click"/>
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+
+                        <!-- 連接點 (右側) -->
+                        <Ellipse x:Name="RightConnector"
+                                 Grid.Column="3"
+                                 Width="12" Height="12"
+                                 Fill="{ThemeResource SystemAccentColor}"
+                                 Stroke="{ThemeResource SystemAccentColorLight1}"
+                                 StrokeThickness="2"
+                                 Margin="4,0,0,0"
+                                 VerticalAlignment="Center"
+                                 PointerPressed="Connector_PointerPressed"
+                                 Tag="Right"/>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </Grid>
+</UserControl>
