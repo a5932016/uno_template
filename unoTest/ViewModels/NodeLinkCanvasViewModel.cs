@@ -19,6 +19,8 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
     public ReadOnlyObservableCollection<NodeLinkNodeViewModel> Nodes { get; }
     public ReadOnlyObservableCollection<NodeLinkLinkViewModel> Links { get; }
 
+    public event EventHandler? GraphChanged;
+
     [ObservableProperty]
     private string _statusText = "拖曳節點移動位置，點擊「新增連線」後依序選擇起點和終點";
 
@@ -49,6 +51,7 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
         AutoLayoutCommand = new RelayCommand(() => AutoLayout());
 
         _nodes.CollectionChanged += NodesOnCollectionChanged;
+        _links.CollectionChanged += LinksOnCollectionChanged;
     }
 
     public NodeLinkNodeViewModel? FindNode(int nodeId)
@@ -301,6 +304,13 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
                 newItem.PropertyChanged += NodeOnPropertyChanged;
             }
         }
+
+        GraphChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void LinksOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        GraphChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void NodeOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -309,8 +319,7 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
             or nameof(NodeLinkNodeViewModel.Y)
             or nameof(NodeLinkNodeViewModel.Title))
         {
-            // 通知畫布重新依據新狀態繪製。
-            OnPropertyChanged(nameof(Nodes));
+            GraphChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 

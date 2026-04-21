@@ -1,4 +1,3 @@
-using System.Collections.Specialized;
 using System.ComponentModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -121,15 +120,7 @@ public sealed partial class NodeLinkCanvas : UserControl
 
     private void AttachViewModel(NodeLinkCanvasViewModel viewModel)
     {
-        if (viewModel.Nodes is INotifyCollectionChanged nodes)
-        {
-            nodes.CollectionChanged += NodesOnCollectionChanged;
-        }
-
-        if (viewModel.Links is INotifyCollectionChanged links)
-        {
-            links.CollectionChanged += LinksOnCollectionChanged;
-        }
+        viewModel.GraphChanged += ViewModelOnGraphChanged;
 
         viewModel.PropertyChanged += ViewModelOnPropertyChanged;
 
@@ -144,15 +135,7 @@ public sealed partial class NodeLinkCanvas : UserControl
 
     private void DetachViewModel(NodeLinkCanvasViewModel viewModel)
     {
-        if (viewModel.Nodes is INotifyCollectionChanged nodes)
-        {
-            nodes.CollectionChanged -= NodesOnCollectionChanged;
-        }
-
-        if (viewModel.Links is INotifyCollectionChanged links)
-        {
-            links.CollectionChanged -= LinksOnCollectionChanged;
-        }
+        viewModel.GraphChanged -= ViewModelOnGraphChanged;
 
         viewModel.PropertyChanged -= ViewModelOnPropertyChanged;
 
@@ -162,30 +145,15 @@ public sealed partial class NodeLinkCanvas : UserControl
         }
     }
 
-    private void NodesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    private void ViewModelOnGraphChanged(object? sender, EventArgs e)
     {
-        if (e.OldItems is not null)
+        foreach (var node in ViewModel.Nodes)
         {
-            foreach (var oldNode in e.OldItems.OfType<NodeLinkNodeViewModel>())
-            {
-                oldNode.PropertyChanged -= NodeOnPropertyChanged;
-            }
-        }
-
-        if (e.NewItems is not null)
-        {
-            foreach (var newNode in e.NewItems.OfType<NodeLinkNodeViewModel>())
-            {
-                newNode.PropertyChanged += NodeOnPropertyChanged;
-            }
+            node.PropertyChanged -= NodeOnPropertyChanged;
+            node.PropertyChanged += NodeOnPropertyChanged;
         }
 
         RenderNodes();
-        RenderLinks();
-    }
-
-    private void LinksOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
         RenderLinks();
     }
 

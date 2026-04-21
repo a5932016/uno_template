@@ -7,6 +7,7 @@
 - [專案結構](#專案結構)
 - [功能特色](#功能特色)
 - [快速開始](#快速開始)
+- [模板詳細文件](#模板詳細文件)
 - [頁面目錄](#頁面目錄)
 - [控件說明](#控件說明)
 - [服務說明](#服務說明)
@@ -138,6 +139,14 @@ dotnet publish -f net9.0-browserwasm -c Release
 - `publish-wasm` - 發布 WebAssembly
 - `build-desktop` - 建置 Desktop
 - `publish-desktop` - 發布 Desktop
+
+---
+
+## 📚 模板詳細文件
+
+每一個模板（Page / Control）都已提供獨立 README，請從以下索引開始：
+
+- `unoTest/Docs/Templates/README.md`
 
 ---
 
