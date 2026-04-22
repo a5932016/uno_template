@@ -6,15 +6,17 @@ namespace unoTest.ViewModels;
 
 /// <summary>
 /// 負責節點圖的狀態與業務規則，不包含任何 UI 控制項邏輯。
+/// 節點依 Y（容差 40px）再依 X 自動排序，並在排序後重建前後鏈連線。
 /// </summary>
 public partial class NodeLinkCanvasViewModel : ObservableObject
 {
+    private const double YTolerance = 40;
+
     private readonly ObservableCollection<NodeLinkNodeViewModel> _nodes = new();
     private readonly ObservableCollection<NodeLinkLinkViewModel> _links = new();
 
     private int _nextNodeId = 1;
     private int _nextLinkId = 1;
-    private int? _linkStartNodeId;
 
     public ReadOnlyObservableCollection<NodeLinkNodeViewModel> Nodes { get; }
     public ReadOnlyObservableCollection<NodeLinkLinkViewModel> Links { get; }
@@ -22,7 +24,7 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
     public event EventHandler? GraphChanged;
 
     [ObservableProperty]
-    private string _statusText = "拖曳節點移動位置，點擊「新增連線」後依序選擇起點和終點";
+    private string _statusText = "拖曳節點移動位置，點擊 ＋ 可新增節點";
 
     [ObservableProperty]
     private int? _selectedNodeId;
@@ -30,11 +32,7 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
     [ObservableProperty]
     private int? _selectedLinkId;
 
-    [ObservableProperty]
-    private bool _isLinkMode;
-
     public IRelayCommand AddNodeCommand { get; }
-    public IRelayCommand StartAddLinkCommand { get; }
     public IRelayCommand DeleteSelectionCommand { get; }
     public IRelayCommand ClearCommand { get; }
     public IRelayCommand AutoLayoutCommand { get; }
@@ -45,7 +43,6 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
         Links = new ReadOnlyObservableCollection<NodeLinkLinkViewModel>(_links);
 
         AddNodeCommand = new RelayCommand(AddNodeFromToolbar);
-        StartAddLinkCommand = new RelayCommand(StartLinkMode);
         DeleteSelectionCommand = new RelayCommand(DeleteSelection, CanDeleteSelection);
         ClearCommand = new RelayCommand(Clear);
         AutoLayoutCommand = new RelayCommand(() => AutoLayout());
@@ -57,85 +54,31 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
     public NodeLinkNodeViewModel? FindNode(int nodeId)
         => _nodes.FirstOrDefault(node => node.Id == nodeId);
 
-    public NodeLinkNodeViewModel AddNode(string title, double x, double y, int? nodeId = null)
+    /// <summary>新增節點，完成後自動排序並重建前後鏈。</summary>
+    public NodeLinkNodeViewModel AddNode(string title, double x, double y, int? nodeId = null,
+        ButtonInfo? buttonInfo = null, TextInfo? textInfo = null, ImageInfo? imageInfo = null)
     {
-        var resolvedId = nodeId ?? _nextNodeId++;
-        _nextNodeId = Math.Max(_nextNodeId, resolvedId + 1);
-
-        var node = new NodeLinkNodeViewModel(resolvedId, title, x, y);
+        var node = CreateNode(title, x, y, nodeId, buttonInfo, textInfo, imageInfo);
         _nodes.Add(node);
-        SelectNode(resolvedId);
-
+        SelectNode(node.Id);
+        SortAndRebuildLinks();
         return node;
     }
 
-    public bool TryAddLink(int fromNodeId, int toNodeId, int? linkId = null)
-    {
-        if (fromNodeId == toNodeId)
-        {
-            return false;
-        }
-
-        if (FindNode(fromNodeId) is null || FindNode(toNodeId) is null)
-        {
-            return false;
-        }
-
-        if (_links.Any(link => link.FromNodeId == fromNodeId && link.ToNodeId == toNodeId))
-        {
-            return false;
-        }
-
-        var resolvedId = linkId ?? _nextLinkId++;
-        _nextLinkId = Math.Max(_nextLinkId, resolvedId + 1);
-
-        _links.Add(new NodeLinkLinkViewModel(resolvedId, fromNodeId, toNodeId));
-        SelectLink(resolvedId);
-
-        return true;
-    }
-
-    public void HandleNodePressed(int nodeId)
-    {
-        if (!IsLinkMode)
-        {
-            SelectNode(nodeId);
-            return;
-        }
-
-        if (_linkStartNodeId is null)
-        {
-            _linkStartNodeId = nodeId;
-            SelectNode(nodeId);
-            StatusText = $"已選擇起點「{FindNode(nodeId)?.Title}」，請點擊終點節點";
-            return;
-        }
-
-        if (_linkStartNodeId == nodeId)
-        {
-            StatusText = "起點與終點不能是同一個節點";
-            _linkStartNodeId = null;
-            IsLinkMode = false;
-            return;
-        }
-
-        var isCreated = TryAddLink(_linkStartNodeId.Value, nodeId);
-        StatusText = isCreated ? "連線完成" : "連線已存在或節點不存在";
-
-        _linkStartNodeId = null;
-        IsLinkMode = false;
-    }
-
+    /// <summary>更新節點座標（拖曳中即時呼叫）。</summary>
     public void MoveNode(int nodeId, double x, double y)
     {
         var node = FindNode(nodeId);
-        if (node is null)
-        {
-            return;
-        }
+        if (node is null) return;
 
         node.X = x;
         node.Y = y;
+    }
+
+    /// <summary>拖曳結束後呼叫，觸發排序與重建連線。</summary>
+    public void EndDrag()
+    {
+        SortAndRebuildLinks();
     }
 
     public void SelectNode(int? nodeId)
@@ -156,35 +99,29 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
         {
             var link = _links.FirstOrDefault(item => item.Id == selectedLinkId);
             if (link is not null)
-            {
                 _links.Remove(link);
-            }
 
             StatusText = "已刪除連線";
             SelectedLinkId = null;
+            SortAndRebuildLinks();
             return;
         }
 
-        if (SelectedNodeId is not int selectedNodeId)
-        {
-            return;
-        }
+        if (SelectedNodeId is not int selectedNodeId) return;
 
         var node = FindNode(selectedNodeId);
-        if (node is null)
-        {
-            return;
-        }
+        if (node is null) return;
 
-        var relatedLinks = _links.Where(link => link.FromNodeId == selectedNodeId || link.ToNodeId == selectedNodeId).ToList();
-        foreach (var link in relatedLinks)
-        {
-            _links.Remove(link);
-        }
+        var relatedLinks = _links
+            .Where(l => l.FromNodeId == selectedNodeId || l.ToNodeId == selectedNodeId)
+            .ToList();
+        foreach (var l in relatedLinks)
+            _links.Remove(l);
 
         _nodes.Remove(node);
         SelectedNodeId = null;
         StatusText = "已刪除節點";
+        SortAndRebuildLinks();
     }
 
     public void Clear()
@@ -193,10 +130,8 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
         _links.Clear();
         _nextNodeId = 1;
         _nextLinkId = 1;
-        _linkStartNodeId = null;
         SelectedNodeId = null;
         SelectedLinkId = null;
-        IsLinkMode = false;
         StatusText = "已清除所有節點和連線";
     }
 
@@ -209,6 +144,7 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
             node.Y = startY + (i / columns) * spacing;
         }
 
+        SortAndRebuildLinks();
         StatusText = "已自動排列節點";
     }
 
@@ -217,23 +153,19 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
         return new NodeGraphDocument
         {
             GraphKey = graphKey,
-            Nodes = _nodes
-                .Select(node => new NodeGraphNodeDocument
-                {
-                    Id = node.Id,
-                    Title = node.Title,
-                    X = node.X,
-                    Y = node.Y
-                })
-                .ToList(),
-            Links = _links
-                .Select(link => new NodeGraphLinkDocument
-                {
-                    Id = link.Id,
-                    FromNodeId = link.FromNodeId,
-                    ToNodeId = link.ToNodeId
-                })
-                .ToList()
+            Nodes = _nodes.Select(n => new NodeGraphNodeDocument
+            {
+                Id = n.Id,
+                Title = n.Title,
+                X = n.X,
+                Y = n.Y
+            }).ToList(),
+            Links = _links.Select(l => new NodeGraphLinkDocument
+            {
+                Id = l.Id,
+                FromNodeId = l.FromNodeId,
+                ToNodeId = l.ToNodeId
+            }).ToList()
         };
     }
 
@@ -247,15 +179,11 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
             return;
         }
 
-        foreach (var node in graph.Nodes.OrderBy(node => node.Id))
-        {
-            AddNode(node.Title, node.X, node.Y, node.Id);
-        }
+        // 批量載入：暫停中間的排序重建，最後做一次
+        foreach (var n in graph.Nodes.OrderBy(n => n.Id))
+            AddNodeSilent(n.Title, n.X, n.Y, n.Id);
 
-        foreach (var link in graph.Links.OrderBy(link => link.Id))
-        {
-            TryAddLink(link.FromNodeId, link.ToNodeId, link.Id);
-        }
+        SortAndRebuildLinks();
 
         SelectedNodeId = null;
         SelectedLinkId = null;
@@ -265,23 +193,80 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
             : $"已載入 {_nodes.Count} 個節點與 {_links.Count} 條連線";
     }
 
-    public void SetStatus(string message)
+    public void SetStatus(string message) => StatusText = message;
+
+    // ── Private helpers ────────────────────────────────────────────────────
+
+    private NodeLinkNodeViewModel CreateNode(string title, double x, double y, int? nodeId,
+        ButtonInfo? buttonInfo, TextInfo? textInfo, ImageInfo? imageInfo)
     {
-        StatusText = message;
+        var resolvedId = nodeId ?? _nextNodeId++;
+        _nextNodeId = Math.Max(_nextNodeId, resolvedId + 1);
+
+        return new NodeLinkNodeViewModel(
+            resolvedId, title, x, y,
+            buttonInfo ?? new ButtonInfo(),
+            textInfo ?? new TextInfo { Text = title },
+            imageInfo ?? new ImageInfo());
+    }
+
+    /// <summary>不觸發 SortAndRebuildLinks 的靜默新增，批量載入時使用。</summary>
+    private void AddNodeSilent(string title, double x, double y, int? nodeId = null,
+        ButtonInfo? buttonInfo = null, TextInfo? textInfo = null, ImageInfo? imageInfo = null)
+    {
+        var node = CreateNode(title, x, y, nodeId, buttonInfo, textInfo, imageInfo);
+        _nodes.Add(node);
+    }
+
+    /// <summary>依 Y（含容差）再依 X 排序節點，然後重建前後鏈連線。</summary>
+    private void SortAndRebuildLinks()
+    {
+        SortNodes();
+        RebuildLinks();
+    }
+
+    private void SortNodes()
+    {
+        var sorted = _nodes.ToList();
+        sorted.Sort((a, b) =>
+        {
+            bool sameRow = Math.Abs(a.Y - b.Y) <= YTolerance;
+            return sameRow ? a.X.CompareTo(b.X) : a.Y.CompareTo(b.Y);
+        });
+
+        for (int i = 0; i < sorted.Count; i++)
+        {
+            int current = _nodes.IndexOf(sorted[i]);
+            if (current != i)
+                _nodes.Move(current, i);
+        }
+    }
+
+    private void RebuildLinks()
+    {
+        // 清除舊連線
+        for (int i = _links.Count - 1; i >= 0; i--)
+            _links.RemoveAt(i);
+
+        _nextLinkId = 1;
+
+        // 建立前後鏈
+        for (int i = 0; i < _nodes.Count - 1; i++)
+            _links.Add(new NodeLinkLinkViewModel(_nextLinkId++, _nodes[i].Id, _nodes[i + 1].Id));
     }
 
     private void AddNodeFromToolbar()
     {
-        var x = 100 + (_nodes.Count % 5) * 150;
-        var y = 100 + (_nodes.Count / 5) * 100;
-        AddNode($"節點 {_nextNodeId}", x, y);
-    }
+        double x = 100 + (_nodes.Count % 5) * 150;
+        double y = 100 + (_nodes.Count / 5) * 100;
 
-    private void StartLinkMode()
-    {
-        IsLinkMode = true;
-        _linkStartNodeId = null;
-        StatusText = "連線模式：請點擊起點節點";
+        if (_nodes.Count > 0)
+        {
+            x = _nodes[_nodes.Count - 1].X + 100;
+            y = _nodes[_nodes.Count - 1].Y;
+        }
+
+        AddNode($"節點 {_nextNodeId}", x, y);
     }
 
     private bool CanDeleteSelection()
@@ -290,20 +275,12 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
     private void NodesOnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         if (e.OldItems is not null)
-        {
-            foreach (var oldItem in e.OldItems.OfType<NodeLinkNodeViewModel>())
-            {
-                oldItem.PropertyChanged -= NodeOnPropertyChanged;
-            }
-        }
+            foreach (var item in e.OldItems.OfType<NodeLinkNodeViewModel>())
+                item.PropertyChanged -= NodeOnPropertyChanged;
 
         if (e.NewItems is not null)
-        {
-            foreach (var newItem in e.NewItems.OfType<NodeLinkNodeViewModel>())
-            {
-                newItem.PropertyChanged += NodeOnPropertyChanged;
-            }
-        }
+            foreach (var item in e.NewItems.OfType<NodeLinkNodeViewModel>())
+                item.PropertyChanged += NodeOnPropertyChanged;
 
         GraphChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -332,19 +309,16 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
     {
         DeleteSelectionCommand.NotifyCanExecuteChanged();
     }
-
-    partial void OnIsLinkModeChanged(bool value)
-    {
-        if (!value)
-        {
-            _linkStartNodeId = null;
-        }
-    }
 }
+
+// ── Sub-ViewModels ────────────────────────────────────────────────────────
 
 public partial class NodeLinkNodeViewModel : ObservableObject
 {
     public int Id { get; }
+    public ButtonInfo ButtonInfo { get; }
+    public TextInfo TextInfo { get; }
+    public ImageInfo ImageInfo { get; }
 
     [ObservableProperty]
     private string _title;
@@ -355,12 +329,16 @@ public partial class NodeLinkNodeViewModel : ObservableObject
     [ObservableProperty]
     private double _y;
 
-    public NodeLinkNodeViewModel(int id, string title, double x, double y)
+    public NodeLinkNodeViewModel(int id, string title, double x, double y,
+        ButtonInfo buttonInfo, TextInfo textInfo, ImageInfo imageInfo)
     {
         Id = id;
         _title = title;
         _x = x;
         _y = y;
+        ButtonInfo = buttonInfo;
+        TextInfo = textInfo;
+        ImageInfo = imageInfo;
     }
 }
 
@@ -376,4 +354,27 @@ public sealed class NodeLinkLinkViewModel
         FromNodeId = fromNodeId;
         ToNodeId = toNodeId;
     }
+}
+
+// ── Node info classes ─────────────────────────────────────────────────────
+
+/// <summary>節點圓形按鈕的外觀設定。</summary>
+public sealed class ButtonInfo
+{
+    public double Width { get; set; } = 50;
+    public double Height { get; set; } = 50;
+}
+
+/// <summary>節點標題文字設定。</summary>
+public sealed class TextInfo
+{
+    public string Text { get; set; } = string.Empty;
+}
+
+/// <summary>節點圖示來源設定（支援 ms-appx:/// 路徑）。</summary>
+public sealed class ImageInfo
+{
+    public string Source { get; set; } = "ms-appx:///Assets/Icons/icon_foreground.svg";
+    public double Width { get; set; } = 32;
+    public double Height { get; set; } = 32;
 }
