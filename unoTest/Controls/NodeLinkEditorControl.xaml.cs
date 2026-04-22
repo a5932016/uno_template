@@ -143,7 +143,14 @@ public sealed partial class NodeLinkEditorControl : UserControl
         if (ViewModel?.SelectedNode is not NodeInfo node) return;
 
         var newTitle = NodeTitleBox.Text.Trim();
-        if (string.IsNullOrEmpty(newTitle) || newTitle == node.Title) return;
+        if (string.IsNullOrEmpty(newTitle))
+        {
+            // 輸入無效時還原為舊標題，給使用者明確回饋
+            NodeTitleBox.Text = node.Title;
+            return;
+        }
+
+        if (newTitle == node.Title) return;
 
         node.Title = newTitle;
         node.TextInfo.Text = newTitle;
