@@ -281,6 +281,7 @@ public class NodeInfo
 /// <summary>連線資料，以 NodeInfo 物件參考代替 ID。</summary>
 public class LinkInfo
 {
+    /// <summary>FromNode/ToNode 由 RebuildLinks 建立時一律設定，執行期不會為 null。</summary>
     public NodeInfo FromNode { get; set; } = null!;
     public NodeInfo ToNode { get; set; } = null!;
     public object? Data { get; set; }

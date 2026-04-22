@@ -241,7 +241,8 @@ public sealed partial class NodeLinkCanvas : UserControl
         if (!string.IsNullOrEmpty(imageInfo.Source))
         {
             try { img.Source = new BitmapImage(new Uri(imageInfo.Source)); }
-            catch (UriFormatException) { /* 忽略無效 URI */ }
+            catch (UriFormatException) { /* 忽略無效 URI 路徑 */ }
+            // 圖片載入可能拋出多種平台例外（IO、解碼等），統一忽略以避免崩潰
             catch (Exception) { /* 忽略其他載入錯誤 */ }
         }
 
@@ -402,7 +403,9 @@ public sealed partial class NodeLinkCanvas : UserControl
 
         var current = e.GetCurrentPoint(NodeCanvas).Position;
 
-        // 直接更新 NodeInfo（與 ViewModel 共享同一物件參考）
+        // ⭐ 直接更新 NodeInfo 的座標（控制項與 ViewModel 共享同一物件參考）。
+        // 這是有意設計的：拖曳過程不觸發 ViewModel 的排序/重建，只更新座標以提升效能，
+        // 拖曳結束後再由 EndDrag() 統一排序並重建前後鏈。
         _draggingNode.X = _nodeStartPosition.X + (current.X - _dragStartPoint.X);
         _draggingNode.Y = _nodeStartPosition.Y + (current.Y - _dragStartPoint.Y);
 
