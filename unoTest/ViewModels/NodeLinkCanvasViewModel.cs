@@ -230,8 +230,8 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
         var sorted = _nodes.ToList();
         sorted.Sort((a, b) =>
         {
-            bool sameRow = Math.Abs(a.Y - b.Y) <= YTolerance;
-            return sameRow ? a.X.CompareTo(b.X) : a.Y.CompareTo(b.Y);
+            bool sameYBand = Math.Abs(a.Y - b.Y) <= YTolerance;
+            return sameYBand ? a.X.CompareTo(b.X) : a.Y.CompareTo(b.Y);
         });
 
         for (int i = 0; i < sorted.Count; i++)
@@ -244,9 +244,8 @@ public partial class NodeLinkCanvasViewModel : ObservableObject
 
     private void RebuildLinks()
     {
-        // 清除舊連線
-        for (int i = _links.Count - 1; i >= 0; i--)
-            _links.RemoveAt(i);
+        // 清除舊連線（單次 Reset 通知）
+        _links.Clear();
 
         _nextLinkId = 1;
 

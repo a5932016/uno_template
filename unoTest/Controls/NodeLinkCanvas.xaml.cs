@@ -13,7 +13,8 @@ namespace unoTest.Controls;
 
 public sealed partial class NodeLinkCanvas : UserControl
 {
-    // 每個節點的根視覺：Border > StackPanel > [Button(image) + TextBlock]
+    // 深色按鈕背景色（#333333）
+    private static readonly Color NodeButtonBackground = Color.FromArgb(255, 51, 51, 51);
     private readonly Dictionary<int, Border> _nodeBorders = new();
 
     private NodeLinkNodeViewModel? _draggingNode;
@@ -256,7 +257,8 @@ public sealed partial class NodeLinkCanvas : UserControl
         if (!string.IsNullOrEmpty(imageInfo.Source))
         {
             try { img.Source = new BitmapImage(new Uri(imageInfo.Source)); }
-            catch { /* 忽略無效路徑 */ }
+            catch (UriFormatException) { /* 忽略無效 URI */ }
+            catch (Exception) { /* 忽略其他載入錯誤 */ }
         }
 
         var btn = new Button
@@ -270,7 +272,7 @@ public sealed partial class NodeLinkCanvas : UserControl
             HorizontalAlignment = HorizontalAlignment.Center,
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
-            Background = new SolidColorBrush(Color.FromArgb(255, 51, 51, 51))
+            Background = new SolidColorBrush(NodeButtonBackground)
         };
 
         var text = new TextBlock
@@ -283,6 +285,8 @@ public sealed partial class NodeLinkCanvas : UserControl
 
         var stack = new StackPanel
         {
+            // IsHitTestVisible=false 在 StackPanel 層防止面板本身截取事件，
+            // 確保所有指標事件都冒泡到 Border 處理。
             IsHitTestVisible = false,
             Orientation = Orientation.Vertical,
             HorizontalAlignment = HorizontalAlignment.Center
