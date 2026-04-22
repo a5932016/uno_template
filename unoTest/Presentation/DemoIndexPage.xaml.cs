@@ -43,6 +43,9 @@ public partial class DemoIndexViewModel : ObservableObject
 
             new DemoItem("流程模板編輯器", "重用同一個 NodeLinkCanvas 控件於第二個 Page", "\uE7C3", 
                 Windows.UI.Color.FromArgb(255, 14, 165, 233), "NodeLinkTemplate", true, NavigateTo),
+
+            new DemoItem("節點流程編輯器", "NodeLinkEditorControl：NodeLinkCanvas + 屬性面板的複合 UserControl", "\uE8A4",
+                Windows.UI.Color.FromArgb(255, 79, 70, 229), "NodeLinkEditor", true, NavigateTo),
             
             new DemoItem("圖片庫", "圖片瀏覽、上傳、預覽、全螢幕檢視功能", "\uE8B9", 
                 Windows.UI.Color.FromArgb(255, 236, 72, 153), "ImageGallery", true, NavigateTo),

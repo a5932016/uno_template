@@ -110,6 +110,7 @@ public partial class App : Application
             new ViewMap<CrudDemoPage, CrudDemoViewModel>(),
             new ViewMap<NodeLinkDemoPage, NodeLinkDemoViewModel>(),
             new ViewMap<NodeLinkTemplatePage, NodeLinkTemplateViewModel>(),
+            new ViewMap<NodeLinkEditorPage, NodeLinkEditorViewModel>(),
             new ViewMap<SettingsPage, SettingsViewModel>(),
             // 新功能頁面
             new ViewMap<ImageGalleryPage>(),
@@ -131,6 +132,7 @@ public partial class App : Application
                     new ("CrudDemo", View: views.FindByViewModel<CrudDemoViewModel>()),
                     new ("NodeLinkDemo", View: views.FindByViewModel<NodeLinkDemoViewModel>()),
                     new ("NodeLinkTemplate", View: views.FindByViewModel<NodeLinkTemplateViewModel>()),
+                    new ("NodeLinkEditor", View: views.FindByViewModel<NodeLinkEditorViewModel>()),
                     new ("Settings", View: views.FindByViewModel<SettingsViewModel>()),
                     // 新功能路由
                     new ("ImageGallery", View: views.FindByView<ImageGalleryPage>()),

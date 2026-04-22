@@ -1,0 +1,69 @@
+<Page x:Class="unoTest.Presentation.NodeLinkEditorPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:controls="using:unoTest.Controls"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      Background="{ThemeResource BackgroundBrush}">
+
+    <!-- ====================================================================
+         節點流程編輯器頁面
+
+         示範如何透過 NodeLinkEditorControl（UserControl）
+         包裝 NodeLinkCanvas，並接入 MVVM + SQLite 資料層。
+
+         結構說明：
+         Row 0  NavigationBar（頁面標題）
+         Row 1  操作工具列（初始化 / 儲存 / 重置）
+         Row 2  NodeLinkEditorControl（畫布 + 屬性面板）
+         ==================================================================== -->
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 頁面標題列 -->
+        <utu:NavigationBar Grid.Row="0"
+                           Content="{Binding PageTitle}"/>
+
+        <!-- 操作工具列 -->
+        <Border Grid.Row="1"
+                Margin="16,12,16,8"
+                Padding="12"
+                CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="初始化"
+                            Command="{Binding InitializeCommand}"
+                            Style="{StaticResource MaterialOutlinedButtonStyle}"/>
+                    <Button Content="儲存到 SQLite"
+                            Command="{Binding SaveCommand}"
+                            Style="{StaticResource MaterialFilledButtonStyle}"/>
+                    <Button Content="重置模板"
+                            Command="{Binding ResetTemplateCommand}"
+                            Style="{StaticResource MaterialTextButtonStyle}"/>
+                </StackPanel>
+
+                <TextBlock Grid.Column="1"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Opacity="0.6"
+                           FontSize="12"
+                           Text="{Binding LastSavedText}"/>
+            </Grid>
+        </Border>
+
+        <!-- 主編輯區：NodeLinkEditorControl -->
+        <controls:NodeLinkEditorControl Grid.Row="2"
+                                         Margin="16,0,16,16"
+                                         ViewModel="{Binding Canvas}"/>
+    </Grid>
+</Page>
