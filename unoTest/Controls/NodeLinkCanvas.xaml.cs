@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Shapes;
 using unoTest.ViewModels;
 using Windows.Foundation;
@@ -12,10 +13,17 @@ namespace unoTest.Controls;
 
 public sealed partial class NodeLinkCanvas : UserControl
 {
-    private readonly Dictionary<int, Button> _nodeButtons = new();
-    private NodeLinkNodeViewModel? _draggingNode;
+    // 深色按鈕背景色（#333333）
+    private static readonly Color NodeButtonBackground = Color.FromArgb(255, 51, 51, 51);
+
+    // Border 以 NodeInfo.Id 為鍵，供拖曳與選取使用
+    private readonly Dictionary<int, Border> _nodeBorders = new();
+
+    private NodeInfo? _draggingNode;
     private Point _dragStartPoint;
     private Point _nodeStartPosition;
+
+    #region Dependency Properties
 
     public static readonly DependencyProperty ShowGridProperty =
         DependencyProperty.Register(nameof(ShowGrid), typeof(bool), typeof(NodeLinkCanvas),
@@ -57,6 +65,8 @@ public sealed partial class NodeLinkCanvas : UserControl
         set => SetValue(ViewModelProperty, value);
     }
 
+    #endregion
+
     public NodeLinkCanvas()
     {
         this.InitializeComponent();
@@ -70,65 +80,45 @@ public sealed partial class NodeLinkCanvas : UserControl
         RenderGraph();
     }
 
+    #region ViewModel wiring
+
     private static void OnViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not NodeLinkCanvas canvas)
-        {
-            return;
-        }
+        if (d is not NodeLinkCanvas canvas) return;
 
-        if (e.OldValue is NodeLinkCanvasViewModel oldViewModel)
-        {
-            canvas.DetachViewModel(oldViewModel);
-        }
+        if (e.OldValue is NodeLinkCanvasViewModel oldVm)
+            canvas.DetachViewModel(oldVm);
 
-        if (e.NewValue is not NodeLinkCanvasViewModel newViewModel)
+        if (e.NewValue is not NodeLinkCanvasViewModel newVm)
         {
             canvas.ViewModel = new NodeLinkCanvasViewModel();
             return;
         }
 
-        canvas.AttachViewModel(newViewModel);
+        canvas.AttachViewModel(newVm);
         canvas.Bindings.Update();
         canvas.RenderGraph();
     }
 
     private static void OnShowGridChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is NodeLinkCanvas canvas)
-        {
-            canvas.DrawGrid();
-        }
+        if (d is NodeLinkCanvas canvas) canvas.DrawGrid();
     }
 
     private static void OnNodeMinWidthChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is NodeLinkCanvas canvas)
-        {
-            canvas.RenderNodes();
-            canvas.RenderLinks();
-        }
+        if (d is NodeLinkCanvas canvas) { canvas.RenderNodes(); canvas.RenderLinks(); }
     }
 
     private static void OnLinkColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is NodeLinkCanvas canvas)
-        {
-            canvas.RenderLinks();
-        }
+        if (d is NodeLinkCanvas canvas) canvas.RenderLinks();
     }
 
     private void AttachViewModel(NodeLinkCanvasViewModel viewModel)
     {
         viewModel.GraphChanged += ViewModelOnGraphChanged;
-
         viewModel.PropertyChanged += ViewModelOnPropertyChanged;
-
-        foreach (var node in viewModel.Nodes)
-        {
-            node.PropertyChanged += NodeOnPropertyChanged;
-        }
-
         DrawGrid();
         RenderGraph();
     }
@@ -136,47 +126,28 @@ public sealed partial class NodeLinkCanvas : UserControl
     private void DetachViewModel(NodeLinkCanvasViewModel viewModel)
     {
         viewModel.GraphChanged -= ViewModelOnGraphChanged;
-
         viewModel.PropertyChanged -= ViewModelOnPropertyChanged;
-
-        foreach (var node in viewModel.Nodes)
-        {
-            node.PropertyChanged -= NodeOnPropertyChanged;
-        }
     }
 
     private void ViewModelOnGraphChanged(object? sender, EventArgs e)
     {
-        foreach (var node in ViewModel.Nodes)
-        {
-            node.PropertyChanged -= NodeOnPropertyChanged;
-            node.PropertyChanged += NodeOnPropertyChanged;
-        }
-
         RenderNodes();
         RenderLinks();
     }
 
     private void ViewModelOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is nameof(NodeLinkCanvasViewModel.SelectedNodeId)
-            or nameof(NodeLinkCanvasViewModel.SelectedLinkId))
+        if (e.PropertyName is nameof(NodeLinkCanvasViewModel.SelectedNode)
+            or nameof(NodeLinkCanvasViewModel.SelectedLink))
         {
             UpdateSelectionVisuals();
             RenderLinks();
         }
     }
 
-    private void NodeOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName is nameof(NodeLinkNodeViewModel.X)
-            or nameof(NodeLinkNodeViewModel.Y)
-            or nameof(NodeLinkNodeViewModel.Title))
-        {
-            RenderNodes();
-            RenderLinks();
-        }
-    }
+    #endregion
+
+    #region Rendering
 
     private void RenderGraph()
     {
@@ -186,34 +157,37 @@ public sealed partial class NodeLinkCanvas : UserControl
 
     private void RenderNodes()
     {
-        var nodeIds = ViewModel.Nodes.Select(node => node.Id).ToHashSet();
+        var nodeIds = ViewModel.GetNodes().Select(n => n.Id).ToHashSet();
 
-        foreach (var entry in _nodeButtons.Where(entry => !nodeIds.Contains(entry.Key)).ToList())
+        // 移除已不存在的節點視覺
+        foreach (var entry in _nodeBorders.Where(e => !nodeIds.Contains(e.Key)).ToList())
         {
-            var button = entry.Value;
-            button.PointerPressed -= NodeOnPointerPressed;
-            button.PointerMoved -= NodeOnPointerMoved;
-            button.PointerReleased -= NodeOnPointerReleased;
-            button.PointerCanceled -= NodeOnPointerCanceled;
-            button.Click -= NodeOnClick;
-            NodeCanvas.Children.Remove(button);
-            _nodeButtons.Remove(entry.Key);
+            UnwireNodeBorder(entry.Value);
+            NodeCanvas.Children.Remove(entry.Value);
+            _nodeBorders.Remove(entry.Key);
         }
 
-        foreach (var node in ViewModel.Nodes)
+        // 新增或更新節點
+        foreach (var node in ViewModel.GetNodes())
         {
-            if (!_nodeButtons.TryGetValue(node.Id, out var button))
+            if (!_nodeBorders.TryGetValue(node.Id, out var border))
             {
-                button = CreateNodeButton(node.Id);
-                _nodeButtons[node.Id] = button;
-                NodeCanvas.Children.Add(button);
+                border = CreateNodeVisual(node);
+                _nodeBorders[node.Id] = border;
+                NodeCanvas.Children.Add(border);
+            }
+            else
+            {
+                // 更新文字（標題可能改變）
+                if (border.Child is StackPanel stack)
+                {
+                    var tb = stack.Children.OfType<TextBlock>().FirstOrDefault();
+                    if (tb is not null) tb.Text = node.TextInfo.Text;
+                }
             }
 
-            button.Content = node.Title;
-            button.MinWidth = NodeMinWidth;
-
-            Canvas.SetLeft(button, node.X);
-            Canvas.SetTop(button, node.Y);
+            Canvas.SetLeft(border, node.X);
+            Canvas.SetTop(border, node.Y);
         }
 
         UpdateSelectionVisuals();
@@ -223,19 +197,12 @@ public sealed partial class NodeLinkCanvas : UserControl
     {
         LinkCanvas.Children.Clear();
 
-        foreach (var link in ViewModel.Links)
+        foreach (var link in ViewModel.GetLinks())
         {
-            var fromNode = ViewModel.FindNode(link.FromNodeId);
-            var toNode = ViewModel.FindNode(link.ToNodeId);
-            if (fromNode is null || toNode is null)
-            {
-                continue;
-            }
+            var fromCenter = GetNodeCenter(link.FromNode);
+            var toCenter = GetNodeCenter(link.ToNode);
 
-            var fromCenter = GetNodeCenter(fromNode);
-            var toCenter = GetNodeCenter(toNode);
-
-            var isSelected = ViewModel.SelectedLinkId == link.Id;
+            var isSelected = ViewModel.SelectedLink == link;
             var strokeColor = isSelected ? Microsoft.UI.Colors.Blue : LinkColor;
 
             var line = new Line
@@ -246,7 +213,7 @@ public sealed partial class NodeLinkCanvas : UserControl
                 Y2 = toCenter.Y,
                 StrokeThickness = isSelected ? 3 : 2,
                 Stroke = new SolidColorBrush(strokeColor),
-                Tag = link.Id
+                Tag = link
             };
             line.PointerPressed += LinkOnPointerPressed;
             LinkCanvas.Children.Add(line);
@@ -255,30 +222,94 @@ public sealed partial class NodeLinkCanvas : UserControl
         }
     }
 
-    private Button CreateNodeButton(int nodeId)
+    /// <summary>
+    /// 建立 Border > StackPanel > [Button(image) + TextBlock] 節點視覺。
+    /// Button 和 TextBlock 的 IsHitTestVisible=false，所有指標事件由 Border 處理。
+    /// </summary>
+    private Border CreateNodeVisual(NodeInfo node)
     {
-        var button = new Button
+        var imageInfo = node.ImageInfo;
+        var btnInfo = node.ButtonInfo;
+
+        var img = new Image
         {
-            Tag = nodeId,
-            Padding = new Thickness(16, 12, 16, 12)
+            IsHitTestVisible = false,
+            Width = imageInfo.Width,
+            Height = imageInfo.Height,
+            Stretch = Stretch.Uniform
+        };
+        if (!string.IsNullOrEmpty(imageInfo.Source))
+        {
+            try { img.Source = new BitmapImage(new Uri(imageInfo.Source)); }
+            catch (UriFormatException) { /* 忽略無效 URI 路徑 */ }
+            // 圖片載入可能拋出多種平台例外（IO、解碼等），統一忽略以避免崩潰
+            catch (Exception) { /* 忽略其他載入錯誤 */ }
+        }
+
+        var btn = new Button
+        {
+            IsHitTestVisible = false,
+            Width = btnInfo.Width,
+            Height = btnInfo.Height,
+            CornerRadius = new CornerRadius(7),
+            Content = img,
+            Padding = new Thickness(0),
+            HorizontalAlignment = HorizontalAlignment.Center,
+            HorizontalContentAlignment = HorizontalAlignment.Center,
+            VerticalContentAlignment = VerticalAlignment.Center,
+            Background = new SolidColorBrush(NodeButtonBackground)
         };
 
-        button.PointerPressed += NodeOnPointerPressed;
-        button.PointerMoved += NodeOnPointerMoved;
-        button.PointerReleased += NodeOnPointerReleased;
-        button.PointerCanceled += NodeOnPointerCanceled;
-        button.Click += NodeOnClick;
+        var text = new TextBlock
+        {
+            IsHitTestVisible = false,
+            Text = node.TextInfo.Text,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            Margin = new Thickness(0, 11, 0, 0)
+        };
 
-        return button;
+        var stack = new StackPanel
+        {
+            // IsHitTestVisible=false 在 StackPanel 層防止面板本身截取事件，
+            // 確保所有指標事件都冒泡到 Border 處理。
+            IsHitTestVisible = false,
+            Orientation = Orientation.Vertical,
+            HorizontalAlignment = HorizontalAlignment.Center
+        };
+        stack.Children.Add(btn);
+        stack.Children.Add(text);
+
+        var border = new Border
+        {
+            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            Child = stack,
+            Tag = node,          // 存 NodeInfo，指標事件直接取用
+            MinWidth = NodeMinWidth
+        };
+
+        border.PointerPressed += NodeOnPointerPressed;
+        border.PointerMoved += NodeOnPointerMoved;
+        border.PointerReleased += NodeOnPointerReleased;
+        border.PointerCanceled += NodeOnPointerReleased;
+
+        return border;
+    }
+
+    private void UnwireNodeBorder(Border border)
+    {
+        border.PointerPressed -= NodeOnPointerPressed;
+        border.PointerMoved -= NodeOnPointerMoved;
+        border.PointerReleased -= NodeOnPointerReleased;
+        border.PointerCanceled -= NodeOnPointerReleased;
     }
 
     private void UpdateSelectionVisuals()
     {
-        foreach (var (nodeId, button) in _nodeButtons)
+        foreach (var (nodeId, border) in _nodeBorders)
         {
-            var isSelected = ViewModel.SelectedNodeId == nodeId;
-            button.BorderBrush = isSelected ? new SolidColorBrush(Microsoft.UI.Colors.Blue) : null;
-            button.BorderThickness = isSelected ? new Thickness(2) : new Thickness(0);
+            var isSelected = ViewModel.SelectedNode?.Id == nodeId;
+            border.BorderBrush = isSelected ? new SolidColorBrush(Microsoft.UI.Colors.Blue) : null;
+            border.BorderThickness = isSelected ? new Thickness(2) : new Thickness(0);
         }
     }
 
@@ -287,7 +318,7 @@ public sealed partial class NodeLinkCanvas : UserControl
         var angle = Math.Atan2(toCenter.Y - fromCenter.Y, toCenter.X - fromCenter.X);
         const double arrowSize = 10;
 
-        var arrowPath = new Polygon
+        var arrow = new Polygon
         {
             Fill = new SolidColorBrush(strokeColor),
             Points = new PointCollection
@@ -300,38 +331,32 @@ public sealed partial class NodeLinkCanvas : UserControl
 
         var arrowX = toCenter.X - 30 * Math.Cos(angle);
         var arrowY = toCenter.Y - 30 * Math.Sin(angle);
-        Canvas.SetLeft(arrowPath, arrowX);
-        Canvas.SetTop(arrowPath, arrowY);
-
-        arrowPath.RenderTransform = new RotateTransform { Angle = angle * 180 / Math.PI };
-        arrowPath.RenderTransformOrigin = new Point(0, 0.5);
-        LinkCanvas.Children.Add(arrowPath);
+        Canvas.SetLeft(arrow, arrowX);
+        Canvas.SetTop(arrow, arrowY);
+        arrow.RenderTransform = new RotateTransform { Angle = angle * 180 / Math.PI };
+        arrow.RenderTransformOrigin = new Point(0, 0.5);
+        LinkCanvas.Children.Add(arrow);
     }
 
-    private Point GetNodeCenter(NodeLinkNodeViewModel node)
+    private Point GetNodeCenter(NodeInfo node)
     {
-        if (_nodeButtons.TryGetValue(node.Id, out var button))
+        if (_nodeBorders.TryGetValue(node.Id, out var border))
         {
-            var width = button.ActualWidth > 0 ? button.ActualWidth : NodeMinWidth;
-            var height = button.ActualHeight > 0 ? button.ActualHeight : 44;
-
-            return new Point(node.X + width / 2, node.Y + height / 2);
+            var w = border.ActualWidth > 0 ? border.ActualWidth : node.Width;
+            var h = border.ActualHeight > 0 ? border.ActualHeight : node.Height;
+            return new Point(node.X + w / 2, node.Y + h / 2);
         }
 
-        return new Point(node.X + NodeMinWidth / 2, node.Y + 22);
+        return new Point(node.X + node.Width / 2, node.Y + node.Height / 2);
     }
 
     private void DrawGrid()
     {
         GridCanvas.Children.Clear();
-        if (!ShowGrid)
-        {
-            return;
-        }
+        if (!ShowGrid) return;
 
         const int gridSize = 20;
         var brush = new SolidColorBrush(Microsoft.UI.Colors.LightGray) { Opacity = 0.3 };
-
         var width = Math.Max(ActualWidth, GridCanvas.ActualWidth);
         var height = Math.Max(ActualHeight, GridCanvas.ActualHeight);
 
@@ -339,12 +364,8 @@ public sealed partial class NodeLinkCanvas : UserControl
         {
             GridCanvas.Children.Add(new Line
             {
-                X1 = x,
-                Y1 = 0,
-                X2 = x,
-                Y2 = height,
-                Stroke = brush,
-                StrokeThickness = 1
+                X1 = x, Y1 = 0, X2 = x, Y2 = height,
+                Stroke = brush, StrokeThickness = 1
             });
         }
 
@@ -352,93 +373,67 @@ public sealed partial class NodeLinkCanvas : UserControl
         {
             GridCanvas.Children.Add(new Line
             {
-                X1 = 0,
-                Y1 = y,
-                X2 = width,
-                Y2 = y,
-                Stroke = brush,
-                StrokeThickness = 1
+                X1 = 0, Y1 = y, X2 = width, Y2 = y,
+                Stroke = brush, StrokeThickness = 1
             });
         }
     }
 
+    #endregion
+
+    #region Pointer Events
+
     private void NodeOnPointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        if (sender is not Button button || button.Tag is not int nodeId)
-        {
-            return;
-        }
-
-        if (ViewModel.IsLinkMode)
-        {
-            ViewModel.HandleNodePressed(nodeId);
-            UpdateSelectionVisuals();
-            RenderLinks();
-            return;
-        }
-
-        var node = ViewModel.FindNode(nodeId);
-        if (node is null)
-        {
-            return;
-        }
+        if (sender is not Border border || border.Tag is not NodeInfo node) return;
 
         _draggingNode = node;
         _dragStartPoint = e.GetCurrentPoint(NodeCanvas).Position;
         _nodeStartPosition = new Point(node.X, node.Y);
 
-        button.CapturePointer(e.Pointer);
-        ViewModel.SelectNode(node.Id);
-        UpdateSelectionVisuals();
-        RenderLinks();
+        border.CapturePointer(e.Pointer);
+        ViewModel.SelectNode(node);
+
+        e.Handled = true;
     }
 
     private void NodeOnPointerMoved(object sender, PointerRoutedEventArgs e)
     {
-        if (_draggingNode is null)
-        {
-            return;
-        }
+        if (_draggingNode is null || sender is not FrameworkElement element) return;
 
-        var currentPoint = e.GetCurrentPoint(NodeCanvas).Position;
-        var deltaX = currentPoint.X - _dragStartPoint.X;
-        var deltaY = currentPoint.Y - _dragStartPoint.Y;
+        var current = e.GetCurrentPoint(NodeCanvas).Position;
 
-        ViewModel.MoveNode(_draggingNode.Id, _nodeStartPosition.X + deltaX, _nodeStartPosition.Y + deltaY);
+        // ⭐ 直接更新 NodeInfo 的座標（控制項與 ViewModel 共享同一物件參考）。
+        // 這是有意設計的：拖曳過程不觸發 ViewModel 的排序/重建，只更新座標以提升效能，
+        // 拖曳結束後再由 EndDrag() 統一排序並重建前後鏈。
+        _draggingNode.X = _nodeStartPosition.X + (current.X - _dragStartPoint.X);
+        _draggingNode.Y = _nodeStartPosition.Y + (current.Y - _dragStartPoint.Y);
+
+        Canvas.SetLeft(element, _draggingNode.X);
+        Canvas.SetTop(element, _draggingNode.Y);
+
+        // 即時更新連線視覺
+        RenderLinks();
     }
 
     private void NodeOnPointerReleased(object sender, PointerRoutedEventArgs e)
     {
-        if (sender is Button button)
-        {
-            button.ReleasePointerCapture(e.Pointer);
-        }
+        if (sender is FrameworkElement element)
+            element.ReleasePointerCapture(e.Pointer);
 
         _draggingNode = null;
-    }
 
-    private void NodeOnPointerCanceled(object sender, PointerRoutedEventArgs e)
-    {
-        _draggingNode = null;
-    }
+        // ⭐ 核心：拖曳結束後排序並重建前後鏈
+        ViewModel.EndDrag();
 
-    private void NodeOnClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button button && button.Tag is int nodeId)
-        {
-            ViewModel.SelectNode(nodeId);
-            UpdateSelectionVisuals();
-            RenderLinks();
-        }
+        e.Handled = true;
     }
 
     private void LinkOnPointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        if (sender is Line line && line.Tag is int linkId)
+        if (sender is Line line && line.Tag is LinkInfo link)
         {
-            ViewModel.SelectLink(linkId);
-            UpdateSelectionVisuals();
-            RenderLinks();
+            ViewModel.SelectLink(link);
             e.Handled = true;
         }
     }
@@ -448,4 +443,6 @@ public sealed partial class NodeLinkCanvas : UserControl
         DrawGrid();
         RenderLinks();
     }
+
+    #endregion
 }
