@@ -1,25 +1,21 @@
-# SecondPage Template
+# SecondPage View README
 
-## 1. Template 目的
-SecondPage 是最簡潔的「導航結果頁」模板，示範接收上一頁傳入的資料模型。
+## 目的
+接收上一頁傳入資料並呈現。
 
-## 2. 檔案組成
+## 對應檔案
 - `Presentation/SecondPage.xaml`
-- `Presentation/SecondPage.xaml.cs`
-- `Presentation/SecondViewModel.cs`
+- `Presentation/SecondViewModel.cs`（`record SecondViewModel(Entity Entity)`）
 
-## 3. 功能清單
-- 接收 `Entity` 導航資料
-- 顯示傳入欄位（Name）
-- 作為 DataViewMap 的最小範例
+## 主要資料流
+- 入口：`MainViewModel` 導航時傳入 `Entity`
+- 顯示：XAML 綁定 `Entity.Name`
 
-## 4. 使用方式
-1. 由前頁呼叫 `NavigateViewModelAsync<SecondViewModel>(..., data)`。
-2. 透過 `DataViewMap<SecondPage, SecondViewModel, Entity>` 完成繫結。
+## 給 Golang 後端工程師的修改建議
+- 這頁相當於 DTO 展示頁。
+- 若要查更多資料，建議用 `Entity.Id` 再呼叫 API，不要把完整大物件全塞在導航參數。
 
-## 5. 擴充建議
-- 將 `record` 擴展為完整詳情頁 ViewModel。
-- 增加返回、編輯與狀態同步命令。
-
-## 6. 注意事項
-- 僅示範資料傳遞，不包含業務流程。
+## 快速上手
+1. 在 `Entity` 加欄位
+2. MainPage 傳新欄位
+3. SecondPage 綁定新欄位

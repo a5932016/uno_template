@@ -1,26 +1,37 @@
-# Shell Template
+# Shell View README
 
-## 1. Template 目的
-Shell 是整個應用的容器模板，提供啟動畫面與內容承載入口。
+## 目的
+`Shell` 是整個 App 的根視圖：上方放全域 `CustomTitleBar`，下方放導航內容區。
 
-## 2. 檔案組成
+## 對應檔案
 - `Presentation/Shell.xaml`
 - `Presentation/Shell.xaml.cs`
 - `Presentation/ShellViewModel.cs`
-- `App.xaml.cs`（`NavigateAsync<Shell>()`）
+- `App.xaml.cs`（`NavigateAsync<Shell>()` + RouteMap root）
 
-## 3. 功能清單
-- ExtendedSplashScreen 顯示啟動狀態
-- 實作 `IContentControlProvider` 供導航系統使用
-- 作為路由根節點的承載 UI
+## 路由與導航
+- App 啟動後先進 `Shell`
+- 所有子頁都掛在 `Shell` 之下（`DemoIndex` 為預設）
 
-## 4. 使用方式
-1. 在 `App.OnLaunched` 最後導航到 `Shell`。
-2. 在 `RegisterRoutes` 設定 Shell 為 root route。
+## 畫面結構
+- Row 0：`WindowDragStrip` + `CustomTitleBar`
+- Row 1：`ExtendedSplashScreen`（Uno Navigation 內容注入點）
 
-## 5. 擴充建議
-- 在 Shell 統一注入全域服務（session、通知、使用者狀態）。
-- 加入全域錯誤顯示層與 loading overlay。
+## 資料流
+- `ShellViewModel` 建立 `TitleBarViewModel`
+- `TitleBarStateService`（Singleton）在各頁與 TitleBar 之間同步模式/Tab 狀態
 
-## 6. 注意事項
-- ShellViewModel 目前極簡，屬於待擴充骨架。
+## 主要依賴
+- `INavigator`
+- `TitleBarStateService`
+- `IThemeService`（可選）
+
+## 給 Golang 後端工程師的修改建議
+- 把 Shell 當成「API Gateway UI 層」：只放全域框架，不放業務邏輯。
+- 業務資料請進 `ViewModel + Service`，不要寫在 Shell code-behind。
+- 如果要加全站通知、全站錯誤攔截，優先改 Shell（不是每個頁面重複加）。
+
+## 快速上手
+1. 新頁面先註冊 `ViewMap + RouteMap`
+2. 從 `DemoIndex` 或 TitleBar Tab 導航到該 route
+3. 需要影響標題列時，注入 `TitleBarStateService` 呼叫 `SetTabsMode / SetDetailMode`

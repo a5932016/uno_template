@@ -1,33 +1,24 @@
-# CrudDemoPage Template
+# CrudDemoPage View README
 
-## 1. Template 目的
-CrudDemoPage 是完整資料管理模板，示範查詢、分頁、編輯、刪除、匯出等常見管理後台場景。
+## 目的
+後台管理頁模板：搜尋、分頁、新增、編輯、刪除、匯出。
 
-## 2. 檔案組成
+## 對應檔案
 - `Presentation/CrudDemoPage.xaml`
-- `Presentation/CrudDemoPage.xaml.cs`
 - `ViewModels/CrudDemoViewModel.cs`
-- `Services/ProductService.cs`
-- `Models/Product.cs`
+- `Services/IProductService` + 實作
 
-## 3. 功能清單
-- 關鍵字搜尋與分類篩選
-- 單筆/批次刪除
-- 分頁（第一頁/上一頁/下一頁/最後頁）
-- 新增與編輯對話框
-- CSV 匯出預覽
-- 載入中遮罩與空狀態提示
+## 核心資料流
+- ViewModel 呼叫 `IProductService.GetPagedAsync`
+- 結果進 `ObservableCollection<ProductViewItem>`
+- UI 綁定清單、分頁、選取狀態
 
-## 4. 使用方式
-1. 在 DI 註冊 `IProductService`。
-2. 頁面載入時設置 `XamlRoot` 讓 ContentDialog 可顯示。
-3. ViewModel 透過 `GetPagedAsync` 驅動畫面資料。
+## 給 Golang 後端工程師的修改建議
+- 這頁最適合直接對接你的 REST API。
+- 推薦 server-side 分頁（page/pageSize/filter/sort）而不是把全部資料拉到前端。
+- 對話框邏輯可抽到 service，讓 ViewModel 更像 handler。
 
-## 5. 擴充建議
-- 將 `ContentDialog` 流程抽成 `ICrudDialogService`（讓 ViewModel 純化）。
-- 將 `MockProductService` 換成 SQLite 或 API Repository。
-- 補齊欄位排序、伺服器端分頁與錯誤重試。
-
-## 6. 注意事項
-- `ListView.SelectAll()` 在 Uno 部分平台未完整支援，跨平台需替代方案。
-- 目前 ViewModel 仍含部分 UI 邏輯，建議逐步拆分。
+## 快速上手
+1. 實作 `IProductService` 串你的 API
+2. 接上錯誤處理（429/5xx）與重試
+3. 補排序欄位與查詢條件 DTO

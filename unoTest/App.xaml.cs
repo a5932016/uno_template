@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.UI.Windowing;
 using Uno.Resizetizer;
 
 namespace unoTest;
@@ -16,6 +17,11 @@ public partial class App : Application
 
     protected Window? MainWindow { get; private set; }
     protected IHost? Host { get; private set; }
+
+    /// <summary>
+    /// 靜態視窗參照，供 Controls（CustomTitleBar）呼叫 SetTitleBar / AppWindow API 使用
+    /// </summary>
+    internal static Window? CurrentMainWindow { get; private set; }
 
     [SuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "Uno.Extensions APIs are used in a way that is safe for trimming in this template context.")]
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
@@ -78,6 +84,8 @@ public partial class App : Application
                     // 註冊服務
                     services.AddSingleton<IAuthService, MockAuthService>();
                     services.AddSingleton<IProductService, MockProductService>();
+                    // ★ TitleBarStateService：Singleton，跨頁面共享 TitleBar 狀態
+                    services.AddSingleton<TitleBarStateService>();
 #if __WASM__
                     services.AddSingleton<INodeGraphRepository, InMemoryNodeGraphRepository>();
 #else
@@ -88,11 +96,39 @@ public partial class App : Application
                 .UseNavigation(RegisterRoutes)
             );
         MainWindow = builder.Window;
+        CurrentMainWindow = MainWindow;  // ★ 供 Controls 層存取
 
 #if DEBUG
         MainWindow.UseStudio();
 #endif
         MainWindow.SetWindowIcon();
+
+        // ★ Desktop only：移除作業系統原生標題列，讓 Shell 的 CustomTitleBar（Row 0）
+        //   延伸至視窗最頂端，成為真正的 OS-level 標題列。
+        //
+        //   底層機制（Uno Platform Win32 後端）：
+        //   ExtendsContentIntoTitleBar = true
+        //     → Win32WindowWrapper 訂閱 AppWindowTitleBar.Changed 事件
+        //     → 呼叫 DwmExtendFrameIntoClientArea（Win32 DWM API）移除原生標題列
+        //     → Skia 渲染層從視窗頂端（y=0）開始繪製，覆蓋整個視窗
+        //
+        //   PreferredHeightOption = Tall（48px）：
+        //     → 讓 DwmExtendFrameIntoClientArea 的 cyTopHeight = 48px，與 CustomTitleBar 高度一致
+        //     → 讓 WindowChrome 的 XAML 視窗控制按鈕（Min/Max/Close）高度也是 48px
+        //     → 確保 Windows 11 拖曳快照功能在正確位置觸發
+        //
+        //   Shell.xaml.cs 會呼叫 CustomTitleBar.BindAsWindowTitleBar(WindowDragStrip)：
+        //     → 只把頂部 8px strip 註冊成可拖曳 Caption Region
+        //     → Tab / Button 保持在 Client 區域，確保可點擊
+#if !__WASM__ && !__ANDROID__ && !__IOS__
+        // Uno Platform 目前僅 Windows Desktop 支援 OS-level TitleBar 客製化
+        if (OperatingSystem.IsWindows())
+        {
+            MainWindow.ExtendsContentIntoTitleBar = true;
+            // 告訴 Uno Platform 標題列高度為 48px（Tall），與 CustomTitleBar 的 Height="48" 一致
+            MainWindow.AppWindow.TitleBar.PreferredHeightOption = TitleBarHeightOption.Tall;
+        }
+#endif
 
         Host = await builder.NavigateAsync<Shell>();
     }
@@ -116,7 +152,10 @@ public partial class App : Application
             new ViewMap<LinkedListDemoPage>(),
             new ViewMap<TabDemoPage>(),
             new ViewMap<DialogDemoPage>(),
-            new ViewMap<LocalizationDemoPage>()
+            new ViewMap<LocalizationDemoPage>(),
+            // ★ 動態 UI + 資料傳遞示範頁面
+            new ViewMap<ProductListPage, ProductListViewModel>(),
+            new DataViewMap<ProductDetailPage, ProductDetailViewModel, ProductNavData>()
         );
 
         routes.Register(
@@ -138,6 +177,9 @@ public partial class App : Application
                     new ("TabDemo", View: views.FindByView<TabDemoPage>()),
                     new ("DialogDemo", View: views.FindByView<DialogDemoPage>()),
                     new ("LocalizationDemo", View: views.FindByView<LocalizationDemoPage>()),
+                    // ★ 動態 UI + 資料傳遞示範
+                    new ("ProductList", View: views.FindByViewModel<ProductListViewModel>()),
+                    new ("ProductDetail", View: views.FindByViewModel<ProductDetailViewModel>()),
                 ]
             )
         );

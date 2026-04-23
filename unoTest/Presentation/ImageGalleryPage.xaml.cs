@@ -214,7 +214,7 @@ public partial class ImageGalleryViewModel : ObservableObject
             picker.FileTypeFilter.Add(".webp");
 
             // 初始化 picker（Windows 需要）
-            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow);
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.CurrentMainWindow);
             WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
             var files = await picker.PickMultipleFilesAsync();

@@ -21,15 +21,7 @@
     </Page.Resources>
 
     <Grid utu:SafeArea.Insets="VisibleBounds">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <!-- 標題列 -->
-        <utu:NavigationBar Content="設定" Grid.Row="0"/>
-
-        <ScrollViewer Grid.Row="1" Padding="16">
+        <ScrollViewer Padding="16">
             <StackPanel Spacing="16" MaxWidth="800">
 
                 <!-- 外觀設定 -->

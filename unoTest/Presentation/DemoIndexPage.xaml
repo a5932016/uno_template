@@ -11,15 +11,7 @@
          ==================================================================== -->
 
     <Grid utu:SafeArea.Insets="VisibleBounds">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
-        <!-- 標題列 -->
-        <utu:NavigationBar Content="Uno Platform 功能展示" Grid.Row="0"/>
-
-        <ScrollViewer Grid.Row="1" Padding="16">
+        <ScrollViewer Padding="16">
             <StackPanel Spacing="16" MaxWidth="1200" HorizontalAlignment="Center">
 
                 <!-- 歡迎區 -->

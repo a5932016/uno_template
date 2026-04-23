@@ -6,6 +6,7 @@ namespace unoTest.ViewModels;
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly IThemeService? _themeService;
+    private readonly TitleBarStateService? _titleBarState;
 
     #region Observable Properties
 
@@ -52,9 +53,12 @@ public partial class SettingsViewModel : ObservableObject
 
     #endregion
 
-    public SettingsViewModel(IThemeService? themeService = null)
+    public SettingsViewModel(
+        IThemeService? themeService = null,
+        TitleBarStateService? titleBarState = null)
     {
         _themeService = themeService;
+        _titleBarState = titleBarState;
 
         ClearCacheCommand = new AsyncRelayCommand(ClearCacheAsync);
         ExportDataCommand = new AsyncRelayCommand(ExportDataAsync);
@@ -64,6 +68,7 @@ public partial class SettingsViewModel : ObservableObject
 
         // 載入目前設定
         LoadSettings();
+        _titleBarState?.SetTabsMode(tabIndex: 2);
     }
 
     partial void OnSelectedThemeIndexChanged(int value)

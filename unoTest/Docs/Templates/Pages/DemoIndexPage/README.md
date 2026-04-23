@@ -1,26 +1,25 @@
-# DemoIndexPage Template
+# DemoIndexPage View README
 
-## 1. Template 目的
-DemoIndexPage 是模板入口頁，透過卡片列表快速導向各示範模板。
+## 目的
+功能入口頁，透過卡片導向所有示範頁。
 
-## 2. 檔案組成
+## 對應檔案
 - `Presentation/DemoIndexPage.xaml`
-- `Presentation/DemoIndexPage.xaml.cs`
+- `Presentation/DemoIndexPage.xaml.cs`（同檔含 `DemoIndexViewModel`）
 
-## 3. 功能清單
-- Demo 卡片列表
-- 路由導航命令
-- NEW 標記
-- 圖示與顏色分組
+## 畫面與互動
+- `ItemsRepeater + UniformGridLayout` 顯示功能卡
+- 每張卡綁定 `NavigateCommand`，導航到 route
 
-## 4. 使用方式
-1. 在 `DemoItems` 新增一個 `DemoItem`。
-2. 指定 route 與描述。
-3. 確保 `App.xaml.cs` 已註冊對應 ViewMap 與 Route。
+## TitleBar 行為
+- 建構子呼叫 `titleBarState.SetTabsMode(0)`，讓首頁 Tab 高亮
 
-## 5. 擴充建議
-- 將 `DemoItems` 改為獨立 ViewModel 檔案。
-- 用設定檔驅動模板列表，降低硬編碼。
+## 給 Golang 後端工程師的修改建議
+- 這頁可視為「前端路由目錄」，相當於 API 文件首頁。
+- 新功能先在 `App.xaml.cs` 註冊 route，再回來加一張 `DemoItem` 卡片。
+- 若卡片資料改成後端配置，可抽成 `IDemoCatalogService`。
 
-## 6. 注意事項
-- 目前 `DemoIndexViewModel` 與 page code-behind 放在同檔，專案變大後建議拆分。
+## 快速上手
+1. 在 `DemoItems` 新增一筆（標題、描述、route）
+2. 確認 route 已註冊
+3. 執行後點卡片驗證可導航

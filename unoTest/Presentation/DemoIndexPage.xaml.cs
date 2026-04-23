@@ -23,12 +23,18 @@ public partial class DemoIndexViewModel : ObservableObject
     
     public List<DemoItem> DemoItems { get; }
 
-    public DemoIndexViewModel(INavigator navigator)
+    public DemoIndexViewModel(INavigator navigator, TitleBarStateService titleBarState)
     {
         _navigator = navigator;
+
+        // 告知 TitleBar：目前在 Tab[0]=首頁
+        titleBarState.SetTabsMode(tabIndex: 0);
         
         DemoItems = new List<DemoItem>
         {
+            new DemoItem("動態UI與資料傳遞", "ObservableCollection 動態清單，點擊 Item 傳遞 ID 到詳情頁", "\uE8A5",
+                Windows.UI.Color.FromArgb(255, 59, 130, 246), "ProductList", true, NavigateTo),
+
             new DemoItem("登入頁面", "完整的登入流程，支援第三方登入和表單驗證", "\uE77B", 
                 Windows.UI.Color.FromArgb(255, 99, 102, 241), "Login", false, NavigateTo),
             

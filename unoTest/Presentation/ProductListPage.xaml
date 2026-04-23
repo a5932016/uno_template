@@ -1,0 +1,160 @@
+<Page x:Class="unoTest.Presentation.ProductListPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:local="using:unoTest.Presentation"
+      xmlns:converters="using:unoTest.Converters"
+      xmlns:utu="using:Uno.Toolkit.UI"
+      Background="{ThemeResource BackgroundBrush}">
+
+  <!--
+    產品列表頁面
+    示範：ObservableCollection 動態清單 + 點擊 Item 傳遞 ID 到詳情頁
+
+    此頁面使用 Shell 的 CustomTitleBar（不加自己的 NavigationBar）
+    進入此頁面時，ProductListViewModel 會呼叫 TitleBarStateService.SetTabsMode(1)
+    讓 TitleBar 選中「產品」Tab
+  -->
+
+  <Page.Resources>
+    <converters:StatusColorConverter x:Key="StatusColorConverter"/>
+    <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+  </Page.Resources>
+
+  <Grid utu:SafeArea.Insets="VisibleBounds" Padding="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <!-- 工具列：標題 + 新增按鈕 -->
+    <Border Grid.Row="0"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+            CornerRadius="8"
+            Padding="16,12"
+            Margin="0,0,0,12">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel VerticalAlignment="Center">
+          <TextBlock Text="動態產品清單"
+                     Style="{StaticResource SubtitleTextBlockStyle}"/>
+          <TextBlock Opacity="0.6"
+                     FontSize="12"
+                     Margin="0,2,0,0">
+            <Run Text="共 "/>
+            <Run Text="{Binding Items.Count}"/>
+            <Run Text=" 筆資料 — 點擊「查看詳情」傳遞 ID 到下一頁"/>
+          </TextBlock>
+        </StackPanel>
+
+        <Button Grid.Column="1"
+                Command="{Binding AddItemCommand}"
+                Style="{StaticResource MaterialFilledButtonStyle}">
+          <StackPanel Orientation="Horizontal" Spacing="6">
+            <FontIcon Glyph="&#xE710;" FontSize="14"/>
+            <TextBlock Text="新增產品"/>
+          </StackPanel>
+        </Button>
+      </Grid>
+    </Border>
+
+    <!-- ============================================================
+         動態清單（核心示範）
+         ItemsSource 綁定 ViewModel 的 ObservableCollection<ProductListItem>
+         當 Items 有新增/移除時，UI 自動更新
+         ============================================================ -->
+    <ScrollViewer Grid.Row="1">
+      <ItemsRepeater x:Name="ProductRepeater"
+                     ItemsSource="{Binding Items}">
+        <ItemsRepeater.Layout>
+          <StackLayout Spacing="8"/>
+        </ItemsRepeater.Layout>
+
+        <!--
+          DataTemplate：每個 ProductListItem 的 UI 外觀
+          由於每個 Item 有自己的 GoToDetailCommand，直接 {Binding GoToDetailCommand} 即可
+          不需要 ElementName 技巧
+        -->
+        <ItemsRepeater.ItemTemplate>
+          <DataTemplate>
+            <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    CornerRadius="10"
+                    Padding="16">
+              <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="60"/>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- ID 徽章 -->
+                <Border Background="{ThemeResource SystemAccentColor}"
+                        CornerRadius="8"
+                        Padding="6,4"
+                        VerticalAlignment="Center">
+                  <!-- ★ Uno/UWP 不支援 Binding.StringFormat，改用 ViewModel 的計算屬性 IdText -->
+                  <TextBlock Text="{Binding IdText}"
+                             FontWeight="Bold"
+                             FontSize="13"
+                             Foreground="White"
+                             HorizontalAlignment="Center"/>
+                </Border>
+
+                <!-- 產品名稱 + 分類 + 價格 -->
+                <StackPanel Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Spacing="3">
+                  <TextBlock Text="{Binding Name}"
+                             FontWeight="SemiBold"
+                             FontSize="14"/>
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Text="{Binding Category}"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Opacity="0.6"/>
+                    <TextBlock Text="{Binding PriceText}"
+                               Style="{StaticResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource SystemAccentColor}"/>
+                  </StackPanel>
+                </StackPanel>
+
+                <!-- 狀態標籤 -->
+                <Border Grid.Column="2"
+                        CornerRadius="5"
+                        Padding="10,4"
+                        VerticalAlignment="Center">
+                  <Border.Background>
+                    <SolidColorBrush Color="{Binding IsActive, Converter={StaticResource StatusColorConverter}}"/>
+                  </Border.Background>
+                  <TextBlock Text="{Binding StatusText}"
+                             FontSize="12"
+                             Foreground="White"/>
+                </Border>
+
+                <!-- ★ 查看詳情按鈕：呼叫 Item 自己的 Command，Command 內部執行導航並傳遞 ID -->
+                <Button Grid.Column="3"
+                        Content="查看詳情"
+                        Command="{Binding GoToDetailCommand}"
+                        Style="{StaticResource MaterialOutlinedButtonStyle}"
+                        VerticalAlignment="Center"/>
+
+                <!-- 刪除按鈕 -->
+                <Button Grid.Column="4"
+                        Command="{Binding RemoveCommand}"
+                        Style="{StaticResource MaterialIconButtonStyle}"
+                        VerticalAlignment="Center"
+                        ToolTipService.ToolTip="刪除">
+                  <FontIcon Glyph="&#xE74D;" FontSize="14"/>
+                </Button>
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsRepeater.ItemTemplate>
+      </ItemsRepeater>
+    </ScrollViewer>
+  </Grid>
+</Page>

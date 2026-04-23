@@ -1,31 +1,19 @@
-# LinkedListDemoPage Template
+# LinkedListDemoPage View README
 
-## 1. Template 目的
-LinkedListDemoPage 展示清單項目間連線互動，適合流程步驟、依賴鏈、關聯圖等操作場景。
+## 目的
+示範清單節點之間的可視化連線（偏流程圖簡化版）。
 
-## 2. 檔案組成
+## 對應檔案
 - `Presentation/LinkedListDemoPage.xaml`
 - `Presentation/LinkedListDemoPage.xaml.cs`
-- `Controls/LinkedListControl.xaml`
-- `Controls/LinkedListControl.xaml.cs`
+- `Controls/LinkedListControl.*`
 
-## 3. 功能清單
-- 載入範例節點清單
-- 建立/移除連線
+## 互動重點
 - 新增節點
-- 連線清空
-- 編輯/刪除節點（ContentDialog）
+- 清除連線
+- 編輯/刪除節點（Dialog）
+- 事件：`LinkCreated`, `LinkRemoved`, `ItemEditRequested`, `ItemDeleteRequested`
 
-## 4. 使用方式
-1. 設置 `LinkedList.ItemsSource`。
-2. 用 `AddLink(fromId, toId)` 建立關聯。
-3. 監聽 `LinkCreated`、`LinkRemoved` 等事件。
-
-## 5. 擴充建議
-- 將節點編輯對話框抽離至服務層。
-- 連線增加條件與顏色語意。
-- 支援節點拖曳排序與自動重新布局。
-
-## 6. 注意事項
-- 連線依賴 VisualTree 與座標轉換，複雜模板下要特別驗證。
-- 大資料量時，Canvas 重繪需做節流。
+## 給 Golang 後端工程師的修改建議
+- 若要持久化，請把節點與連線拆兩張表（nodes, edges）。
+- UI 事件只發命令，實際存檔交給 service。

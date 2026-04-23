@@ -1,26 +1,12 @@
-# CardControl Template
+# CardControl Control README
 
-## 1. Template 目的
-CardControl 是可重用資訊卡片模板，統一卡片標題、副標題、內容與操作區布局。
+## 目的
+可重用卡片容器，統一各頁資訊區塊 UI。
 
-## 2. 檔案組成
+## 對應檔案
 - `Controls/CardControl.xaml`
 - `Controls/CardControl.xaml.cs`
 
-## 3. 功能清單
-- `Title` / `Subtitle` 文字屬性
-- `Icon` 顯示
-- `CardContent` 內容插槽
-- `PrimaryActionContent` / `SecondaryActionContent` 操作插槽
-
-## 4. 使用方式
-1. 在 XAML 宣告 `CardControl`。
-2. 設定標題相關 DependencyProperty。
-3. 把自訂內容放進 `CardContent`。
-
-## 5. 擴充建議
-- 增加 `IsLoading` 狀態與 skeleton。
-- 增加 `StatusBadge` 區塊。
-
-## 6. 注意事項
-- 建議將色彩與字體統一交由 `App.xaml` Style 控制。
+## 使用建議
+- 適合承載「同一組資料的摘要 + 操作按鈕」
+- 不適合放過度複雜流程（避免變成巨型 control）

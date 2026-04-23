@@ -20,6 +20,8 @@
             </ResourceDictionary>
           </utum:MaterialToolkitTheme.FontOverrideDictionary> -->
         </utum:MaterialToolkitTheme>
+        <!-- ★ 視窗標題列相關樣式（WindowCaptionButtonStyle 等） -->
+        <ResourceDictionary Source="ms-appx:///Styles/TitleBarStyles.xaml"/>
       </ResourceDictionary.MergedDictionaries>
 
       <!-- 全域 Converters -->

@@ -1,29 +1,21 @@
-# LayoutDemoPage Template
+# LayoutDemoPage View README
 
-## 1. Template 目的
-LayoutDemoPage 用於展示 Uno XAML 常見布局手法，適合當新頁面切版的起始模板。
+## 目的
+純版面教學頁，示範 Grid/StackPanel/響應式切換。
 
-## 2. 檔案組成
+## 對應檔案
 - `Presentation/LayoutDemoPage.xaml`
 - `Presentation/LayoutDemoPage.xaml.cs`
 
-## 3. 功能清單
-- Grid 行列布局
-- StackPanel 排版
-- 卡片式內容分區
-- 響應式排列示範
-- SafeArea 與 NavigationBar 基礎結構
+## 適用情境
+- 你要快速切一個新頁面版型
+- 你要驗證不同裝置寬度下 UI 變化
 
-## 4. 使用方式
-1. 複製頁面骨架（NavigationBar + 內容區）。
-2. 依需求替換示範區塊。
-3. 將資料來源改為你的 ViewModel。
+## 給 Golang 後端工程師的修改建議
+- 把這頁當「UI scaffold」，不要塞業務。
+- 先定好 ViewModel 資料結構，再回填 Binding，避免 XAML 先寫死。
 
-## 5. 擴充建議
-- 將重複 UI 區塊抽成 UserControl。
-- 將固定字串加上 `x:Uid` 以支援多語系。
-- 以 `ItemsRepeater` 取代硬編排版，降低維護成本。
-
-## 6. 注意事項
-- 此頁面重點是布局，不含完整業務流程。
-- 若你要上線使用，建議補齊無障礙標籤與自動化屬性。
+## 快速上手
+1. 先複製這頁骨架
+2. 把示範區塊替換成真實區塊
+3. 補齊 ViewModel 與命令
