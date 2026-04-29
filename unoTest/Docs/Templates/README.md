@@ -19,6 +19,7 @@
 - TabDemoPage: `Pages/TabDemoPage/README.md`
 - DialogDemoPage: `Pages/DialogDemoPage/README.md`
 - LocalizationDemoPage: `Pages/LocalizationDemoPage/README.md`
+- ImageAnnotationTemplatePage: `Pages/ImageAnnotationTemplatePage/README.md`
 - ProductListPage: `Pages/ProductListPage/README.md`
 - ProductDetailPage: `Pages/ProductDetailPage/README.md`
 
@@ -28,6 +29,7 @@
 - CustomTitleBar: `Controls/CustomTitleBar/README.md`
 - DataGridControl: `Controls/DataGridControl/README.md`
 - EmptyStateView: `Controls/EmptyStateView/README.md`
+- ImageAnnotationEditorControl: `Controls/ImageAnnotationEditorControl/README.md`
 - LinkedListControl: `Controls/LinkedListControl/README.md`
 - LoadingOverlay: `Controls/LoadingOverlay/README.md`
 - NavigationMenu: `Controls/NavigationMenu/README.md`

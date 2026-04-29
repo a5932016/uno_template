@@ -64,6 +64,9 @@ public partial class DemoIndexViewModel : ObservableObject
             
             new DemoItem("多語系", "語言切換、日期格式化、IStringLocalizer 用法", "\uE8C1", 
                 Windows.UI.Color.FromArgb(255, 34, 197, 94), "LocalizationDemo", true, NavigateTo),
+
+            new DemoItem("圖片標註模板", "載入圖片、移動視圖、方框與多邊形描邊，並可另存新檔", "\uE7C3", 
+                Windows.UI.Color.FromArgb(255, 239, 68, 68), "ImageAnnotationTemplate", true, NavigateTo),
             
             new DemoItem("設定頁面", "主題、語言、通知等應用程式設定範例", "\uE713", 
                 Windows.UI.Color.FromArgb(255, 107, 114, 128), "Settings", false, NavigateTo),

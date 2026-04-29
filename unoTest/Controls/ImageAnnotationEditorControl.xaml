@@ -1,0 +1,146 @@
+<UserControl x:Class="unoTest.Controls.ImageAnnotationEditorControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0"
+                Margin="0,0,0,12"
+                Padding="12"
+                CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="0"
+                        Content="載入圖片"
+                        Click="LoadImageButton_Click"
+                        Style="{StaticResource MaterialOutlinedButtonStyle}"/>
+
+                <Button Grid.Column="1"
+                        Content="另存新檔"
+                        Click="SaveAsButton_Click"
+                        Style="{StaticResource MaterialFilledButtonStyle}"/>
+
+                <ComboBox x:Name="ToolComboBox"
+                          Grid.Column="2"
+                          Width="156"
+                          SelectionChanged="ToolComboBox_SelectionChanged"
+                          HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="移動圖片" Tag="MoveImage" IsSelected="True"/>
+                    <ComboBoxItem Content="方框線" Tag="Rectangle"/>
+                    <ComboBoxItem Content="多邊形線" Tag="Polygon"/>
+                </ComboBox>
+
+                <ComboBox x:Name="ColorComboBox"
+                          Grid.Column="3"
+                          Width="140"
+                          SelectionChanged="ColorComboBox_SelectionChanged"
+                          HorizontalAlignment="Stretch">
+                    <ComboBoxItem Content="紅色" Tag="Red" IsSelected="True"/>
+                    <ComboBoxItem Content="橘色" Tag="Orange"/>
+                    <ComboBoxItem Content="黃色" Tag="Gold"/>
+                    <ComboBoxItem Content="綠色" Tag="LimeGreen"/>
+                    <ComboBoxItem Content="藍色" Tag="DodgerBlue"/>
+                    <ComboBoxItem Content="紫色" Tag="MediumPurple"/>
+                    <ComboBoxItem Content="黑色" Tag="Black"/>
+                </ComboBox>
+
+                <Button x:Name="FinishPolygonButton"
+                        Grid.Column="4"
+                        Content="完成多邊形"
+                        Click="FinishPolygonButton_Click"
+                        IsEnabled="False"
+                        Style="{StaticResource MaterialTextButtonStyle}"/>
+
+                <Button Grid.Column="5"
+                        Content="縮小"
+                        Click="ZoomOutButton_Click"
+                        Style="{StaticResource MaterialTextButtonStyle}"/>
+
+                <Button Grid.Column="6"
+                        Content="放大"
+                        Click="ZoomInButton_Click"
+                        Style="{StaticResource MaterialTextButtonStyle}"/>
+
+                <TextBlock Grid.Column="7"
+                           VerticalAlignment="Center"
+                           Text="{x:Bind ViewModel.ZoomDisplayText, Mode=OneWay}"
+                           Opacity="0.8"/>
+
+                <TextBlock Grid.Column="8"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Right"
+                           Opacity="0.75"
+                           Text="{x:Bind ViewModel.HintText, Mode=OneWay}"/>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1"
+                Padding="8"
+                CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <ScrollViewer x:Name="EditorScrollViewer"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                <Grid x:Name="ZoomHost"
+                      Width="960"
+                      Height="540">
+                    <Grid x:Name="EditorSurface"
+                          Width="960"
+                          Height="540"
+                          Background="{ThemeResource SystemControlBackgroundBaseLowBrush}"
+                          RenderTransformOrigin="0,0">
+                        <Grid.RenderTransform>
+                            <ScaleTransform x:Name="EditorScaleTransform" ScaleX="1" ScaleY="1"/>
+                        </Grid.RenderTransform>
+
+                        <Image x:Name="LoadedImage"
+                               Width="960"
+                               Height="540"
+                               Stretch="Fill"
+                               HorizontalAlignment="Left"
+                               VerticalAlignment="Top"/>
+
+                        <Canvas x:Name="OverlayCanvas"
+                                Width="960"
+                                Height="540"
+                                Background="Transparent"
+                                PointerPressed="OverlayCanvas_PointerPressed"
+                                PointerMoved="OverlayCanvas_PointerMoved"
+                                PointerReleased="OverlayCanvas_PointerReleased"
+                                PointerCanceled="OverlayCanvas_PointerCanceled"/>
+
+                        <Canvas x:Name="AdornerCanvas"
+                                Width="960"
+                                Height="540"/>
+
+                        <Border x:Name="EmptyHintContainer"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Padding="12"
+                                CornerRadius="8"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                            <TextBlock Text="請先載入圖片，然後用工具建立標註。"
+                                       Opacity="0.8"/>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

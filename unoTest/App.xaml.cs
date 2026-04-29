@@ -153,6 +153,7 @@ public partial class App : Application
             new ViewMap<TabDemoPage>(),
             new ViewMap<DialogDemoPage>(),
             new ViewMap<LocalizationDemoPage>(),
+            new ViewMap<ImageAnnotationTemplatePage>(),
             // ★ 動態 UI + 資料傳遞示範頁面
             new ViewMap<ProductListPage, ProductListViewModel>(),
             new DataViewMap<ProductDetailPage, ProductDetailViewModel, ProductNavData>()
@@ -177,6 +178,7 @@ public partial class App : Application
                     new ("TabDemo", View: views.FindByView<TabDemoPage>()),
                     new ("DialogDemo", View: views.FindByView<DialogDemoPage>()),
                     new ("LocalizationDemo", View: views.FindByView<LocalizationDemoPage>()),
+                    new ("ImageAnnotationTemplate", View: views.FindByView<ImageAnnotationTemplatePage>()),
                     // ★ 動態 UI + 資料傳遞示範
                     new ("ProductList", View: views.FindByViewModel<ProductListViewModel>()),
                     new ("ProductDetail", View: views.FindByViewModel<ProductDetailViewModel>()),
