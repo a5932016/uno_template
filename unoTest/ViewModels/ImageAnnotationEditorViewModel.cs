@@ -56,9 +56,14 @@ public sealed partial class ImageAnnotationEditorViewModel : ObservableObject
         return true;
     }
 
+    public bool TryGetColor(string colorKey, out Color color)
+    {
+        return _colorMap.TryGetValue(colorKey, out color);
+    }
+
     public bool TrySetColor(string colorKey)
     {
-        if (!_colorMap.TryGetValue(colorKey, out var color))
+        if (!TryGetColor(colorKey, out var color))
         {
             return false;
         }

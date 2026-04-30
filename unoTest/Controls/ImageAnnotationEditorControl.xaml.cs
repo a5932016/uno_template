@@ -55,13 +55,188 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
     private double _resizeStartHeight;
     private List<Point>? _resizeStartPolygonPoints;
 
+    public static readonly DependencyProperty ShowToolbarProperty =
+        DependencyProperty.Register(
+            nameof(ShowToolbar),
+            typeof(bool),
+            typeof(ImageAnnotationEditorControl),
+            new PropertyMetadata(true, OnShowToolbarChanged));
+
     public ImageAnnotationEditorViewModel ViewModel { get; } = new();
+
+    public bool ShowToolbar
+    {
+        get => (bool)GetValue(ShowToolbarProperty);
+        set => SetValue(ShowToolbarProperty, value);
+    }
 
     public ImageAnnotationEditorControl()
     {
         this.InitializeComponent();
         InitializeCanvas(ImageAnnotationEditorViewModel.DefaultCanvasWidth, ImageAnnotationEditorViewModel.DefaultCanvasHeight);
         ApplyZoom(ViewModel.ZoomFactor, resetOffsets: true);
+        ApplyToolbarVisibility();
+    }
+
+    private static void OnShowToolbarChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageAnnotationEditorControl control)
+        {
+            control.ApplyToolbarVisibility();
+        }
+    }
+
+    public bool SetTool(AnnotationTool tool)
+    {
+        if (ViewModel.ActiveTool == tool)
+        {
+            return true;
+        }
+
+        ViewModel.ActiveTool = tool;
+        SyncToolComboBox(tool);
+
+        if (tool != AnnotationTool.Polygon)
+        {
+            if (_polygonPoints.Count >= 3)
+            {
+                FinishActivePolygon();
+            }
+            else
+            {
+                CancelInProgressPolygon();
+            }
+        }
+
+        UpdateHint(ImageAnnotationEditorViewModel.GetToolHint(tool));
+        return true;
+    }
+
+    public bool TrySetTool(string rawTool)
+    {
+        if (!Enum.TryParse<AnnotationTool>(rawTool, out var tool))
+        {
+            return false;
+        }
+
+        return SetTool(tool);
+    }
+
+    public bool TrySetColor(string colorKey)
+    {
+        if (!ViewModel.TrySetColor(colorKey))
+        {
+            return false;
+        }
+
+        SyncColorComboBox(colorKey);
+        return true;
+    }
+
+    public void SetStrokeColor(Windows.UI.Color color)
+    {
+        ViewModel.ActiveColor = color;
+        SyncColorComboBox(null);
+    }
+
+    public float SetZoom(float zoomFactor)
+    {
+        ApplyZoom(zoomFactor, resetOffsets: false);
+        return ViewModel.ZoomFactor;
+    }
+
+    public float ZoomIn(float factor = 1.25f)
+    {
+        if (factor <= 1f)
+        {
+            factor = 1.25f;
+        }
+
+        ApplyZoom(ViewModel.ZoomFactor * factor, resetOffsets: false);
+        return ViewModel.ZoomFactor;
+    }
+
+    public float ZoomOut(float factor = 0.8f)
+    {
+        if (factor >= 1f || factor <= 0f)
+        {
+            factor = 0.8f;
+        }
+
+        ApplyZoom(ViewModel.ZoomFactor * factor, resetOffsets: false);
+        return ViewModel.ZoomFactor;
+    }
+
+    public bool UndoLastAction()
+    {
+        if (_draftRectangle is not null)
+        {
+            OverlayCanvas.Children.Remove(_draftRectangle);
+            _draftRectangle = null;
+            UpdateHint("已取消尚未完成的方框。");
+            return true;
+        }
+
+        if (_polygonPoints.Count > 0 || _draftPolyline is not null || _polygonGuideLine is not null)
+        {
+            CancelInProgressPolygon();
+            UpdateHint("已取消尚未完成的多邊形。");
+            return true;
+        }
+
+        var target = _selectedAnnotation ?? _annotations.LastOrDefault();
+        if (target is null)
+        {
+            UpdateHint("目前沒有可取消的標註。");
+            return false;
+        }
+
+        RemoveAnnotation(target);
+        SelectAnnotation(null);
+        UpdateHint("已取消一筆標註。");
+        return true;
+    }
+
+    public AnnotationSelectionInfo? GetCurrentSelection()
+    {
+        if (_selectedAnnotation is null)
+        {
+            return null;
+        }
+
+        return CreateSelectionInfo(_selectedAnnotation);
+    }
+
+    public async Task<bool> LoadImageAsync(StorageFile file)
+    {
+        using var stream = await file.OpenReadAsync();
+        return await LoadImageAsync(stream, file.Name);
+    }
+
+    public async Task<bool> LoadImageAsync(IRandomAccessStream stream, string? sourceFileName = null)
+    {
+        if (stream is null)
+        {
+            return false;
+        }
+
+        stream.Seek(0);
+        var bitmap = new BitmapImage();
+        await bitmap.SetSourceAsync(stream);
+
+        if (bitmap.PixelWidth <= 0 || bitmap.PixelHeight <= 0)
+        {
+            return false;
+        }
+
+        LoadedImage.Source = bitmap;
+        InitializeCanvas(bitmap.PixelWidth, bitmap.PixelHeight);
+        ClearAllAnnotations();
+        EmptyHintContainer.Visibility = Visibility.Collapsed;
+        ViewModel.SetSourceFileName(sourceFileName ?? ViewModel.SourceFileName);
+        ApplyZoom(1f, resetOffsets: true);
+        UpdateHint($"已載入 {ViewModel.SourceFileName}，可開始標註。已支援拖曳與調整。");
+        return true;
     }
 
     private async void LoadImageButton_Click(object sender, RoutedEventArgs e)
@@ -94,23 +269,12 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
                 return;
             }
 
-            using var stream = await file.OpenReadAsync();
-            var bitmap = new BitmapImage();
-            await bitmap.SetSourceAsync(stream);
-
-            if (bitmap.PixelWidth <= 0 || bitmap.PixelHeight <= 0)
+            var isLoaded = await LoadImageAsync(file);
+            if (!isLoaded)
             {
                 await ShowMessageAsync("讀取失敗", "無法取得圖片尺寸，請改用其他圖片。");
                 return;
             }
-
-            LoadedImage.Source = bitmap;
-            InitializeCanvas(bitmap.PixelWidth, bitmap.PixelHeight);
-            ClearAllAnnotations();
-            EmptyHintContainer.Visibility = Visibility.Collapsed;
-            ViewModel.SetSourceFileName(file.Name);
-            ApplyZoom(1f, resetOffsets: true);
-            UpdateHint($"已載入 {file.Name}，可開始標註。已支援拖曳與調整。");
         }
         catch (Exception ex)
         {
@@ -194,24 +358,12 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
             return;
         }
 
-        if (!ViewModel.TrySetTool(rawTool, out var selectedTool))
+        if (!Enum.TryParse<AnnotationTool>(rawTool, out var selectedTool))
         {
             return;
         }
 
-        if (selectedTool != AnnotationTool.Polygon)
-        {
-            if (_polygonPoints.Count >= 3)
-            {
-                FinishActivePolygon();
-            }
-            else
-            {
-                CancelInProgressPolygon();
-            }
-        }
-
-        UpdateHint(ImageAnnotationEditorViewModel.GetToolHint(ViewModel.ActiveTool));
+        SetTool(selectedTool);
     }
 
     private void ColorComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -221,7 +373,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
             return;
         }
 
-        if (ViewModel.TrySetColor(colorKey))
+        if (TrySetColor(colorKey))
         {
             UpdateHint($"已切換線條顏色：{item.Content}");
         }
@@ -234,12 +386,12 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
     private void ZoomOutButton_Click(object sender, RoutedEventArgs e)
     {
-        ChangeZoom(ViewModel.ZoomFactor * 0.8f);
+        ZoomOut();
     }
 
     private void ZoomInButton_Click(object sender, RoutedEventArgs e)
     {
-        ChangeZoom(ViewModel.ZoomFactor * 1.25f);
+        ZoomIn();
     }
 
     private void OverlayCanvas_PointerPressed(object sender, PointerRoutedEventArgs e)
@@ -869,6 +1021,28 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         ClearAdorners();
     }
 
+    private void RemoveAnnotation(AnnotationItem annotation)
+    {
+        annotation.ShapeElement.PointerPressed -= AnnotationShape_PointerPressed;
+        annotation.ShapeElement.PointerMoved -= AnnotationShape_PointerMoved;
+        annotation.ShapeElement.PointerReleased -= AnnotationShape_PointerReleased;
+        annotation.ShapeElement.PointerCanceled -= AnnotationShape_PointerCanceled;
+
+        _annotations.Remove(annotation);
+        _shapeLookup.Remove(annotation.ShapeElement);
+        OverlayCanvas.Children.Remove(annotation.ShapeElement);
+
+        if (_selectedAnnotation == annotation)
+        {
+            _selectedAnnotation = null;
+        }
+
+        if (_draggingAnnotation == annotation)
+        {
+            _draggingAnnotation = null;
+        }
+    }
+
     private void InitializeCanvas(double width, double height)
     {
         ViewModel.SetCanvasSize(width, height);
@@ -884,11 +1058,6 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
         ZoomHost.Width = ViewModel.BaseCanvasWidth * ViewModel.ZoomFactor;
         ZoomHost.Height = ViewModel.BaseCanvasHeight * ViewModel.ZoomFactor;
-    }
-
-    private void ChangeZoom(float nextZoom)
-    {
-        ApplyZoom(nextZoom, resetOffsets: false);
     }
 
     private void ApplyZoom(float zoomFactor, bool resetOffsets)
@@ -994,6 +1163,79 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         ViewModel.HintText = message;
     }
 
+    private void ApplyToolbarVisibility()
+    {
+        if (ToolbarContainer is null)
+        {
+            return;
+        }
+
+        ToolbarContainer.Visibility = ShowToolbar ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void SyncToolComboBox(AnnotationTool tool)
+    {
+        if (ToolComboBox is null)
+        {
+            return;
+        }
+
+        foreach (var entry in ToolComboBox.Items.OfType<ComboBoxItem>())
+        {
+            if (entry.Tag is string tag && string.Equals(tag, tool.ToString(), StringComparison.Ordinal))
+            {
+                ToolComboBox.SelectedItem = entry;
+                break;
+            }
+        }
+    }
+
+    private void SyncColorComboBox(string? colorKey)
+    {
+        if (ColorComboBox is null)
+        {
+            return;
+        }
+
+        ComboBoxItem? matchedItem = null;
+
+        if (!string.IsNullOrWhiteSpace(colorKey))
+        {
+            matchedItem = ColorComboBox.Items
+                .OfType<ComboBoxItem>()
+                .FirstOrDefault(item => string.Equals(item.Tag as string, colorKey, StringComparison.Ordinal));
+        }
+
+        if (matchedItem is null)
+        {
+            matchedItem = ColorComboBox.Items
+                .OfType<ComboBoxItem>()
+                .FirstOrDefault(item => item.Tag is string tag && ViewModel.TryGetColor(tag, out var knownColor) && knownColor == ViewModel.ActiveColor);
+        }
+
+        if (matchedItem is not null && !ReferenceEquals(ColorComboBox.SelectedItem, matchedItem))
+        {
+            ColorComboBox.SelectedItem = matchedItem;
+        }
+    }
+
+    private AnnotationSelectionInfo CreateSelectionInfo(AnnotationItem annotation)
+    {
+        var bounds = GetBounds(annotation);
+        var color = annotation.ShapeElement.Stroke is SolidColorBrush brush ? brush.Color : ViewModel.ActiveColor;
+        var points = annotation.ShapeElement is Polygon polygon
+            ? polygon.Points.Select(point => new Point(point.X, point.Y)).ToList()
+            : [];
+
+        return new AnnotationSelectionInfo
+        {
+            Kind = annotation.Kind == AnnotationShapeKind.Rectangle ? AnnotationSelectionKind.Rectangle : AnnotationSelectionKind.Polygon,
+            Bounds = bounds,
+            StrokeColor = color,
+            Points = points
+        };
+    }
+
     private enum AnnotationShapeKind
     {
         Rectangle,
@@ -1023,4 +1265,21 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
         public int? PolygonVertexIndex { get; init; }
     }
+}
+
+public enum AnnotationSelectionKind
+{
+    Rectangle,
+    Polygon
+}
+
+public sealed class AnnotationSelectionInfo
+{
+    public AnnotationSelectionKind Kind { get; init; }
+
+    public Rect Bounds { get; init; }
+
+    public Windows.UI.Color StrokeColor { get; init; }
+
+    public IReadOnlyList<Point> Points { get; init; } = [];
 }

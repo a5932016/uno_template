@@ -1,7 +1,7 @@
 # ImageAnnotationTemplatePage View README
 
 ## 目的
-提供一個可直接重用的圖片標註模板頁，支援載入圖片、拖曳移動畫面、方框描邊、多邊形描邊、選色與另存新檔。
+提供一個可直接重用的圖片標註模板頁，示範「XAML 只放核心畫布」並由外層透過 API 控制模式、顏色與縮放。
 
 ## 對應檔案
 - `Presentation/ImageAnnotationTemplatePage.xaml`
@@ -14,6 +14,8 @@
 - `ImageAnnotationTemplatePage` 現在是容器頁，只負責導航與承載控制項
 - 核心互動改為 `ImageAnnotationEditorControl`（可重用於其他頁面）
 - 編輯器狀態改為 `ImageAnnotationEditorViewModel`（工具、顏色、縮放與提示文字）
+- 容器頁可用 `ShowToolbar="False"` 隱藏內建工具列，只保留畫布
+- 容器頁可在 code-behind / ViewModel 呼叫 control API（`SetTool`、`SetZoom`、`TrySetColor`、`UndoLastAction`、`LoadImageAsync`）
 
 ## 功能清單
 - 載入圖片：透過檔案挑選器匯入常見圖片格式
