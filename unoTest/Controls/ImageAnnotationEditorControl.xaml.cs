@@ -149,7 +149,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
     {
         if (factor <= 1f)
         {
-            factor = 1.25f;
+            throw new ArgumentOutOfRangeException(nameof(factor), "ZoomIn factor must be greater than 1.");
         }
 
         ApplyZoom(ViewModel.ZoomFactor * factor, resetOffsets: false);
@@ -158,9 +158,9 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
     public float ZoomOut(float factor = 0.8f)
     {
-        if (factor >= 1f || factor <= 0f)
+        if (factor <= 0f || factor >= 1f)
         {
-            factor = 0.8f;
+            throw new ArgumentOutOfRangeException(nameof(factor), "ZoomOut factor must be between 0 and 1.");
         }
 
         ApplyZoom(ViewModel.ZoomFactor * factor, resetOffsets: false);
@@ -1229,7 +1229,12 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
         return new AnnotationSelectionInfo
         {
-            Kind = annotation.Kind == AnnotationShapeKind.Rectangle ? AnnotationSelectionKind.Rectangle : AnnotationSelectionKind.Polygon,
+            Kind = annotation.Kind switch
+            {
+                AnnotationShapeKind.Rectangle => AnnotationSelectionKind.Rectangle,
+                AnnotationShapeKind.Polygon => AnnotationSelectionKind.Polygon,
+                _ => throw new NotSupportedException($"Unsupported AnnotationShapeKind: {annotation.Kind}")
+            },
             Bounds = bounds,
             StrokeColor = color,
             Points = points
