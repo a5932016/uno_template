@@ -56,7 +56,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
     private double _resizeStartHeight;
     private List<Point>? _resizeStartPolygonPoints;
     private bool _isControlReady;
-    private AnnotationTool _appliedTool = AnnotationTool.MoveImage;
+    private AnnotationTool _lastAppliedTool = AnnotationTool.MoveImage;
 
     public static readonly DependencyProperty ShowToolbarProperty =
         DependencyProperty.Register(
@@ -87,10 +87,11 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
     public ImageAnnotationEditorControl()
     {
         this.InitializeComponent();
-        _isControlReady = true;
         ViewModel = new ImageAnnotationEditorViewModel();
         InitializeCanvas(ImageAnnotationEditorViewModel.DefaultCanvasWidth, ImageAnnotationEditorViewModel.DefaultCanvasHeight);
         ApplyToolbarVisibility();
+        _isControlReady = true;
+        ApplyViewModelState();
     }
 
     private static void OnShowToolbarChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -115,7 +116,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
         if (e.NewValue is not ImageAnnotationEditorViewModel newViewModel)
         {
-            control.ViewModel = new ImageAnnotationEditorViewModel();
+            control.SetValue(ViewModelProperty, new ImageAnnotationEditorViewModel());
             return;
         }
 
@@ -126,7 +127,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
     public bool SetTool(AnnotationTool tool)
     {
-        var previousTool = _appliedTool;
+        var previousTool = _lastAppliedTool;
 
         if (previousTool != tool)
         {
@@ -135,19 +136,9 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
         SyncToolComboBox(tool);
 
-        if (previousTool != tool && tool != AnnotationTool.Polygon)
-        {
-            if (_polygonPoints.Count >= 3)
-            {
-                FinishActivePolygon();
-            }
-            else
-            {
-                CancelInProgressPolygon();
-            }
-        }
+        HandleToolModeTransition(previousTool, tool);
 
-        _appliedTool = tool;
+        _lastAppliedTool = tool;
         UpdateHint(ImageAnnotationEditorViewModel.GetToolHint(tool));
         return true;
     }
@@ -421,51 +412,38 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
     private void AttachViewModel(ImageAnnotationEditorViewModel viewModel)
     {
-        viewModel.PropertyChanged += ViewModelOnPropertyChanged;
+        viewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
     private void DetachViewModel(ImageAnnotationEditorViewModel viewModel)
     {
-        viewModel.PropertyChanged -= ViewModelOnPropertyChanged;
+        viewModel.PropertyChanged -= OnViewModelPropertyChanged;
     }
 
-    private void ViewModelOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (!_isControlReady)
         {
             return;
         }
 
-        if (e.PropertyName == nameof(ImageAnnotationEditorViewModel.ActiveTool))
+        switch (e.PropertyName)
         {
-            var nextTool = ViewModel.ActiveTool;
-            SyncToolComboBox(nextTool);
-
-            if (_appliedTool != nextTool && nextTool != AnnotationTool.Polygon)
+            case nameof(ImageAnnotationEditorViewModel.ActiveTool):
             {
-                if (_polygonPoints.Count >= 3)
-                {
-                    FinishActivePolygon();
-                }
-                else
-                {
-                    CancelInProgressPolygon();
-                }
+                var nextTool = ViewModel.ActiveTool;
+                SyncToolComboBox(nextTool);
+                HandleToolModeTransition(_lastAppliedTool, nextTool);
+                _lastAppliedTool = nextTool;
+                return;
             }
 
-            _appliedTool = nextTool;
-            return;
-        }
-
-        if (e.PropertyName == nameof(ImageAnnotationEditorViewModel.ActiveColor))
-        {
-            SyncColorComboBox(null);
-            return;
-        }
-
-        if (e.PropertyName == nameof(ImageAnnotationEditorViewModel.ZoomFactor))
-        {
-            ApplyZoom(ViewModel.ZoomFactor, resetOffsets: false);
+            case nameof(ImageAnnotationEditorViewModel.ActiveColor):
+                SyncColorComboBox(null);
+                return;
+            case nameof(ImageAnnotationEditorViewModel.ZoomFactor):
+                ApplyZoom(ViewModel.ZoomFactor, resetOffsets: false);
+                return;
         }
     }
 
@@ -477,7 +455,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         }
 
         SyncToolComboBox(ViewModel.ActiveTool);
-        _appliedTool = ViewModel.ActiveTool;
+        _lastAppliedTool = ViewModel.ActiveTool;
         SyncColorComboBox(null);
         ApplyZoom(ViewModel.ZoomFactor, resetOffsets: false);
     }
@@ -1313,7 +1291,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         {
             matchedItem = ColorComboBox.Items
                 .OfType<ComboBoxItem>()
-                .FirstOrDefault(item => item.Tag is string tag && ViewModel.TryGetColor(tag, out var knownColor) && knownColor == ViewModel.ActiveColor);
+                .FirstOrDefault(IsMatchedViewModelColor);
         }
 
         if (matchedItem is not null && !ReferenceEquals(ColorComboBox.SelectedItem, matchedItem))
@@ -1342,6 +1320,33 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
             StrokeColor = color,
             Points = points
         };
+    }
+
+    private bool IsMatchedViewModelColor(ComboBoxItem item)
+    {
+        if (item.Tag is not string tag || !ViewModel.TryGetColor(tag, out var knownColor))
+        {
+            return false;
+        }
+
+        return knownColor == ViewModel.ActiveColor;
+    }
+
+    private void HandleToolModeTransition(AnnotationTool previousTool, AnnotationTool nextTool)
+    {
+        if (previousTool == nextTool || nextTool == AnnotationTool.Polygon)
+        {
+            return;
+        }
+
+        if (_polygonPoints.Count >= 3)
+        {
+            FinishActivePolygon();
+        }
+        else
+        {
+            CancelInProgressPolygon();
+        }
     }
 
     private enum AnnotationShapeKind
