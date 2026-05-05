@@ -57,6 +57,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
     private List<Point>? _resizeStartPolygonPoints;
     private bool _isControlReady;
     private AnnotationTool _lastAppliedTool = AnnotationTool.MoveImage;
+    private bool _isUpdatingSourceFileNameFromImageLoad;
 
     public static readonly DependencyProperty ShowToolbarProperty =
         DependencyProperty.Register(
@@ -264,7 +265,15 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         InitializeCanvas(bitmap.PixelWidth, bitmap.PixelHeight);
         ClearAllAnnotations();
         EmptyHintContainer.Visibility = Visibility.Collapsed;
-        ViewModel.SetSourceFileName(sourceFileName ?? ViewModel.SourceFileName);
+        _isUpdatingSourceFileNameFromImageLoad = true;
+        try
+        {
+            ViewModel.SetSourceFileName(sourceFileName ?? ViewModel.SourceFileName);
+        }
+        finally
+        {
+            _isUpdatingSourceFileNameFromImageLoad = false;
+        }
         ApplyZoom(1f, resetOffsets: true);
         UpdateHint($"已載入 {ViewModel.SourceFileName}，可開始標註。已支援拖曳與調整。");
         return true;
@@ -443,6 +452,9 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
                 return;
             case nameof(ImageAnnotationEditorViewModel.ZoomFactor):
                 ApplyZoom(ViewModel.ZoomFactor, resetOffsets: false);
+                return;
+            case nameof(ImageAnnotationEditorViewModel.SourceFileName):
+                HandleSourceFileNameChanged();
                 return;
         }
     }
@@ -1347,6 +1359,21 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         {
             CancelInProgressPolygon();
         }
+    }
+
+    private void HandleSourceFileNameChanged()
+    {
+        if (_isUpdatingSourceFileNameFromImageLoad)
+        {
+            return;
+        }
+
+        LoadedImage.Source = null;
+        InitializeCanvas(ImageAnnotationEditorViewModel.DefaultCanvasWidth, ImageAnnotationEditorViewModel.DefaultCanvasHeight);
+        ClearAllAnnotations();
+        EmptyHintContainer.Visibility = Visibility.Visible;
+        ApplyZoom(1f, resetOffsets: true);
+        UpdateHint($"來源名稱已更新為 {ViewModel.SourceFileName}，請載入對應圖片。");
     }
 
     private enum AnnotationShapeKind
