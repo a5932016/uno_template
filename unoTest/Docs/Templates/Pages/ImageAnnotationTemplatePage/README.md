@@ -16,6 +16,7 @@
 - 編輯器狀態改為 `ImageAnnotationEditorViewModel`（工具、顏色、縮放與提示文字）
 - 容器頁可用 `ShowToolbar="False"` 隱藏內建工具列，只保留畫布
 - 容器頁可在 code-behind / ViewModel 呼叫 control API（`SetTool`、`SetZoom`、`TrySetColor`、`UndoLastAction`、`LoadImageAsync`）
+- 若需雙向整合頁面 VM，改用 `ViewModel` DependencyProperty 綁定外部 `ImageAnnotationEditorViewModel`
 
 ## 功能清單
 - 載入圖片：透過檔案挑選器匯入常見圖片格式

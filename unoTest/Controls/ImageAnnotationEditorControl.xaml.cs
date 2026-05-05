@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.ComponentModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -54,6 +55,8 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
     private double _resizeStartWidth;
     private double _resizeStartHeight;
     private List<Point>? _resizeStartPolygonPoints;
+    private bool _isControlReady;
+    private AnnotationTool _appliedTool = AnnotationTool.MoveImage;
 
     public static readonly DependencyProperty ShowToolbarProperty =
         DependencyProperty.Register(
@@ -62,7 +65,18 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
             typeof(ImageAnnotationEditorControl),
             new PropertyMetadata(true, OnShowToolbarChanged));
 
-    public ImageAnnotationEditorViewModel ViewModel { get; } = new();
+    public static readonly DependencyProperty ViewModelProperty =
+        DependencyProperty.Register(
+            nameof(ViewModel),
+            typeof(ImageAnnotationEditorViewModel),
+            typeof(ImageAnnotationEditorControl),
+            new PropertyMetadata(null, OnViewModelChanged));
+
+    public ImageAnnotationEditorViewModel ViewModel
+    {
+        get => (ImageAnnotationEditorViewModel)GetValue(ViewModelProperty);
+        set => SetValue(ViewModelProperty, value);
+    }
 
     public bool ShowToolbar
     {
@@ -73,8 +87,9 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
     public ImageAnnotationEditorControl()
     {
         this.InitializeComponent();
+        _isControlReady = true;
+        ViewModel = new ImageAnnotationEditorViewModel();
         InitializeCanvas(ImageAnnotationEditorViewModel.DefaultCanvasWidth, ImageAnnotationEditorViewModel.DefaultCanvasHeight);
-        ApplyZoom(ViewModel.ZoomFactor, resetOffsets: true);
         ApplyToolbarVisibility();
     }
 
@@ -86,17 +101,41 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         }
     }
 
-    public bool SetTool(AnnotationTool tool)
+    private static void OnViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (ViewModel.ActiveTool == tool)
+        if (d is not ImageAnnotationEditorControl control)
         {
-            return true;
+            return;
         }
 
-        ViewModel.ActiveTool = tool;
+        if (e.OldValue is ImageAnnotationEditorViewModel oldViewModel)
+        {
+            control.DetachViewModel(oldViewModel);
+        }
+
+        if (e.NewValue is not ImageAnnotationEditorViewModel newViewModel)
+        {
+            control.ViewModel = new ImageAnnotationEditorViewModel();
+            return;
+        }
+
+        control.AttachViewModel(newViewModel);
+        control.Bindings.Update();
+        control.ApplyViewModelState();
+    }
+
+    public bool SetTool(AnnotationTool tool)
+    {
+        var previousTool = _appliedTool;
+
+        if (previousTool != tool)
+        {
+            ViewModel.ActiveTool = tool;
+        }
+
         SyncToolComboBox(tool);
 
-        if (tool != AnnotationTool.Polygon)
+        if (previousTool != tool && tool != AnnotationTool.Polygon)
         {
             if (_polygonPoints.Count >= 3)
             {
@@ -108,6 +147,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
             }
         }
 
+        _appliedTool = tool;
         UpdateHint(ImageAnnotationEditorViewModel.GetToolHint(tool));
         return true;
     }
@@ -377,6 +417,69 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         {
             UpdateHint($"已切換線條顏色：{item.Content}");
         }
+    }
+
+    private void AttachViewModel(ImageAnnotationEditorViewModel viewModel)
+    {
+        viewModel.PropertyChanged += ViewModelOnPropertyChanged;
+    }
+
+    private void DetachViewModel(ImageAnnotationEditorViewModel viewModel)
+    {
+        viewModel.PropertyChanged -= ViewModelOnPropertyChanged;
+    }
+
+    private void ViewModelOnPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (!_isControlReady)
+        {
+            return;
+        }
+
+        if (e.PropertyName == nameof(ImageAnnotationEditorViewModel.ActiveTool))
+        {
+            var nextTool = ViewModel.ActiveTool;
+            SyncToolComboBox(nextTool);
+
+            if (_appliedTool != nextTool && nextTool != AnnotationTool.Polygon)
+            {
+                if (_polygonPoints.Count >= 3)
+                {
+                    FinishActivePolygon();
+                }
+                else
+                {
+                    CancelInProgressPolygon();
+                }
+            }
+
+            _appliedTool = nextTool;
+            return;
+        }
+
+        if (e.PropertyName == nameof(ImageAnnotationEditorViewModel.ActiveColor))
+        {
+            SyncColorComboBox(null);
+            return;
+        }
+
+        if (e.PropertyName == nameof(ImageAnnotationEditorViewModel.ZoomFactor))
+        {
+            ApplyZoom(ViewModel.ZoomFactor, resetOffsets: false);
+        }
+    }
+
+    private void ApplyViewModelState()
+    {
+        if (!_isControlReady)
+        {
+            return;
+        }
+
+        SyncToolComboBox(ViewModel.ActiveTool);
+        _appliedTool = ViewModel.ActiveTool;
+        SyncColorComboBox(null);
+        ApplyZoom(ViewModel.ZoomFactor, resetOffsets: false);
     }
 
     private void FinishPolygonButton_Click(object sender, RoutedEventArgs e)

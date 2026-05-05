@@ -19,6 +19,9 @@
 - 在任意 Page XAML 引入 `xmlns:controls="using:unoTest.Controls"`
 - 只顯示核心畫布可用：`<controls:ImageAnnotationEditorControl ShowToolbar="False" />`
 - 容器頁可透過 control API 快速操作，不必在 XAML 放內建工具列
+- 若要由外層 VM 控制狀態，請綁定 `ViewModel`（DependencyProperty）：
+  - `<controls:ImageAnnotationEditorControl ViewModel="{Binding AnnotationEditor}" />`
+  - 外層修改 `AnnotationEditor.ActiveTool / ActiveColor / ZoomFactor` 會同步套用到 control
 
 ## 可重用 API（Control）
 - `SetTool(AnnotationTool tool)` / `TrySetTool(string rawTool)`：切換模式（移動/方框/多邊形）
