@@ -13,6 +13,9 @@
 
         <utu:NavigationBar Grid.Row="0" Content="圖片標註模板"/>
 
-        <controls:ImageAnnotationEditorControl Grid.Row="1" Margin="16"/>
+        <controls:ImageAnnotationEditorControl x:Name="Editor"
+                                               Grid.Row="1"
+                                               Margin="16"
+                                               ShowToolbar="False"/>
     </Grid>
 </Page>
