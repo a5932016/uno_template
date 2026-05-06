@@ -4,9 +4,9 @@
 提供可重用的圖片標註控制項，供任何頁面嵌入使用。
 
 ## 對應檔案
-- `Controls/ImageAnnotationEditorControl.xaml`
-- `Controls/ImageAnnotationEditorControl.xaml.cs`
-- `ViewModels/ImageAnnotationEditorViewModel.cs`
+- `uIP/UI/Uno/Views/UserControls/ImageAnnotationEditorControl.xaml`
+- `uIP/UI/Uno/Views/UserControls/ImageAnnotationEditorControl.xaml.cs`
+- `uIP/UI/Uno/ViewModels/ImageAnnotationEditorViewModel.cs`
 
 ## 主要能力
 - 載入圖片與另存 PNG
@@ -18,7 +18,7 @@
 - 區塊生命週期紀錄：建立 / 更新 / 刪除 / 選取 / 載入
 
 ## 重用方式
-- 在任意 Page XAML 引入 `xmlns:controls="using:unoTest.Controls"`
+- 在任意 Page XAML 引入 `xmlns:controls="using:uIP.UI.Uno.Views.UserControls"`
 - 只顯示核心畫布可用：`<controls:ImageAnnotationEditorControl ShowToolbar="False" />`
 - 容器頁可透過 control API 快速操作，不必在 XAML 放內建工具列
 - 若要由外層 VM 控制狀態，請綁定 `ViewModel`（DependencyProperty）：

@@ -6,9 +6,9 @@
 ## 對應檔案
 - `Presentation/ImageAnnotationTemplatePage.xaml`
 - `Presentation/ImageAnnotationTemplatePage.xaml.cs`
-- `Controls/ImageAnnotationEditorControl.xaml`
-- `Controls/ImageAnnotationEditorControl.xaml.cs`
-- `ViewModels/ImageAnnotationEditorViewModel.cs`
+- `uIP/UI/Uno/Views/UserControls/ImageAnnotationEditorControl.xaml`
+- `uIP/UI/Uno/Views/UserControls/ImageAnnotationEditorControl.xaml.cs`
+- `uIP/UI/Uno/ViewModels/ImageAnnotationEditorViewModel.cs`
 
 ## 架構調整
 - `ImageAnnotationTemplatePage` 現在是容器頁，只負責導航與承載控制項

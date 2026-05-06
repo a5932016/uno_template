@@ -8,6 +8,7 @@ global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;
 global using Uno.Extensions.Http.Kiota;
 global using Uno.Extensions.Navigation;
+global using uIP.UI.Uno.ViewModels;
 global using unoTest.Controls;
 global using unoTest.Converters;
 global using unoTest.Models;

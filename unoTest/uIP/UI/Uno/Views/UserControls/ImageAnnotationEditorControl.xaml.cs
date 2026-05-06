@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Shapes;
+using uIP.UI.Uno.ViewModels;
 using unoTest.Models;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;

@@ -1,10 +1,11 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
+using CommunityToolkit.Mvvm.ComponentModel;
 using unoTest.Models;
 using Color = Windows.UI.Color;
 using IOPath = System.IO.Path;
 
-namespace unoTest.ViewModels;
+namespace uIP.UI.Uno.ViewModels;
 
 public sealed partial class ImageAnnotationEditorViewModel : ObservableObject
 {
