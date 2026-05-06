@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Shapes;
+using unoTest.Models;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -58,6 +59,8 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
     private bool _isControlReady;
     private AnnotationTool _lastAppliedTool = AnnotationTool.MoveImage;
     private bool _isUpdatingSourceFileNameFromImageLoad;
+    private bool _isSyncingFromViewModel;
+    private bool _isSyncingToViewModel;
 
     public static readonly DependencyProperty ShowToolbarProperty =
         DependencyProperty.Register(
@@ -422,11 +425,13 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
     private void AttachViewModel(ImageAnnotationEditorViewModel viewModel)
     {
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        viewModel.BlocksReloadRequested += OnViewModelBlocksReloadRequested;
     }
 
     private void DetachViewModel(ImageAnnotationEditorViewModel viewModel)
     {
         viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        viewModel.BlocksReloadRequested -= OnViewModelBlocksReloadRequested;
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -456,7 +461,20 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
             case nameof(ImageAnnotationEditorViewModel.SourceFileName):
                 HandleSourceFileNameChanged();
                 return;
+            case nameof(ImageAnnotationEditorViewModel.SelectedBlockId):
+                ApplySelectedBlockFromViewModel();
+                return;
         }
+    }
+
+    private void OnViewModelBlocksReloadRequested(object? sender, EventArgs e)
+    {
+        if (!_isControlReady)
+        {
+            return;
+        }
+
+        ImportAnnotations(ViewModel.Blocks);
     }
 
     private void ApplyViewModelState()
@@ -470,6 +488,41 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         _lastAppliedTool = ViewModel.ActiveTool;
         SyncColorComboBox(null);
         ApplyZoom(ViewModel.ZoomFactor, resetOffsets: false);
+        ImportAnnotations(ViewModel.Blocks);
+    }
+
+    public IReadOnlyList<AnnotationBlock> ExportAnnotations()
+    {
+        return _annotations
+            .Select(CreateBlockFromAnnotation)
+            .Where(static block => block is not null)
+            .Cast<AnnotationBlock>()
+            .ToList();
+    }
+
+    public void ImportAnnotations(IEnumerable<AnnotationBlock> blocks)
+    {
+        _isSyncingFromViewModel = true;
+        try
+        {
+            ClearAllAnnotations(syncViewModel: false);
+
+            AnnotationItem? selected = null;
+            foreach (var block in blocks)
+            {
+                var item = TryCreateAnnotationFromBlock(block);
+                if (item is not null && string.Equals(block.Id, ViewModel.SelectedBlockId, StringComparison.Ordinal))
+                {
+                    selected = item;
+                }
+            }
+
+            SelectAnnotation(selected);
+        }
+        finally
+        {
+            _isSyncingFromViewModel = false;
+        }
     }
 
     private void FinishPolygonButton_Click(object sender, RoutedEventArgs e)
@@ -581,6 +634,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
             {
                 var createdItem = RegisterAnnotation(_draftRectangle, AnnotationShapeKind.Rectangle);
                 SelectAnnotation(createdItem);
+                SyncAnnotationToViewModel(createdItem, AnnotationBlockEventType.Created);
                 UpdateHint("方框已建立，可直接拖曳移動或拉角點調整大小。");
             }
 
@@ -681,9 +735,11 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
         if (_draggingAnnotation is not null)
         {
+            var updatedItem = _draggingAnnotation;
             _draggingAnnotation = null;
             _dragStartPolygonPoints = null;
             RenderAdorners();
+            SyncAnnotationToViewModel(updatedItem, AnnotationBlockEventType.Updated);
             UpdateHint("已更新標註位置。");
         }
     }
@@ -764,9 +820,11 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
 
         if (_activeHandleTag is not null)
         {
+            var updatedItem = _activeHandleTag.Owner;
             _activeHandleTag = null;
             _resizeStartPolygonPoints = null;
             RenderAdorners();
+            SyncAnnotationToViewModel(updatedItem, AnnotationBlockEventType.Updated);
             UpdateHint("已更新標註尺寸或節點。");
         }
     }
@@ -850,6 +908,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         OverlayCanvas.Children.Add(polygon);
         var createdItem = RegisterAnnotation(polygon, AnnotationShapeKind.Polygon);
         SelectAnnotation(createdItem);
+        SyncAnnotationToViewModel(createdItem, AnnotationBlockEventType.Created);
 
         _draftPolyline = null;
         _polygonGuideLine = null;
@@ -876,7 +935,13 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         FinishPolygonButton.IsEnabled = false;
     }
 
-    private AnnotationItem RegisterAnnotation(Shape shape, AnnotationShapeKind kind)
+    private AnnotationItem RegisterAnnotation(
+        Shape shape,
+        AnnotationShapeKind kind,
+        string? blockId = null,
+        DateTimeOffset? createdAtUtc = null,
+        string? label = null,
+        string? note = null)
     {
         shape.PointerPressed += AnnotationShape_PointerPressed;
         shape.PointerMoved += AnnotationShape_PointerMoved;
@@ -886,13 +951,205 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         var item = new AnnotationItem
         {
             Kind = kind,
-            ShapeElement = shape
+            ShapeElement = shape,
+            BlockId = string.IsNullOrWhiteSpace(blockId) ? Guid.NewGuid().ToString("N") : blockId,
+            CreatedAtUtc = createdAtUtc ?? DateTimeOffset.UtcNow,
+            Label = label ?? string.Empty,
+            Note = note ?? string.Empty
         };
 
         _annotations.Add(item);
         _shapeLookup[shape] = item;
 
         return item;
+    }
+
+    private AnnotationItem? TryCreateAnnotationFromBlock(AnnotationBlock block)
+    {
+        if (block.Type == AnnotationBlockType.Rectangle)
+        {
+            var x = Clamp(block.Bounds.X, 0, GetCanvasWidth());
+            var y = Clamp(block.Bounds.Y, 0, GetCanvasHeight());
+            var maxWidth = Math.Max(MinimumShapeSize, GetCanvasWidth() - x);
+            var maxHeight = Math.Max(MinimumShapeSize, GetCanvasHeight() - y);
+            var width = Clamp(block.Bounds.Width, MinimumShapeSize, maxWidth);
+            var height = Clamp(block.Bounds.Height, MinimumShapeSize, maxHeight);
+
+            var rectangle = new Rectangle
+            {
+                Stroke = new SolidColorBrush(ParseColorOrFallback(block.StrokeColor, ViewModel.ActiveColor)),
+                StrokeThickness = 2,
+                Fill = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+                Width = width,
+                Height = height
+            };
+
+            OverlayCanvas.Children.Add(rectangle);
+            Canvas.SetLeft(rectangle, x);
+            Canvas.SetTop(rectangle, y);
+            return RegisterAnnotation(rectangle, AnnotationShapeKind.Rectangle, block.Id, block.CreatedAtUtc, block.Label, block.Note);
+        }
+
+        var points = block.Points
+            .Select(point => ClampPointToCanvas(new Point(point.X, point.Y)))
+            .ToList();
+
+        if (points.Count < 3)
+        {
+            return null;
+        }
+
+        var polygon = new Polygon
+        {
+            Stroke = new SolidColorBrush(ParseColorOrFallback(block.StrokeColor, ViewModel.ActiveColor)),
+            StrokeThickness = 2,
+            Fill = new SolidColorBrush(Microsoft.UI.Colors.Transparent)
+        };
+
+        foreach (var point in points)
+        {
+            polygon.Points.Add(point);
+        }
+
+        OverlayCanvas.Children.Add(polygon);
+        return RegisterAnnotation(polygon, AnnotationShapeKind.Polygon, block.Id, block.CreatedAtUtc, block.Label, block.Note);
+    }
+
+    private AnnotationBlock? CreateBlockFromAnnotation(AnnotationItem item)
+    {
+        var bounds = GetBounds(item);
+        if (bounds == Rect.Empty)
+        {
+            return null;
+        }
+
+        var color = item.ShapeElement.Stroke is SolidColorBrush brush ? brush.Color : ViewModel.ActiveColor;
+        var blockType = item.Kind == AnnotationShapeKind.Rectangle
+            ? AnnotationBlockType.Rectangle
+            : AnnotationBlockType.Polygon;
+        var points = item.ShapeElement is Polygon polygon
+            ? polygon.Points.Select(point => new AnnotationPoint { X = point.X, Y = point.Y }).ToList()
+            : [];
+
+        return new AnnotationBlock
+        {
+            Id = item.BlockId,
+            Type = blockType,
+            StrokeColor = ColorToHex(color),
+            Bounds = new AnnotationRect
+            {
+                X = bounds.X,
+                Y = bounds.Y,
+                Width = bounds.Width,
+                Height = bounds.Height
+            },
+            Points = points,
+            Label = item.Label,
+            Note = item.Note,
+            CreatedAtUtc = item.CreatedAtUtc,
+            UpdatedAtUtc = DateTimeOffset.UtcNow
+        };
+    }
+
+    private void SyncAnnotationToViewModel(AnnotationItem item, AnnotationBlockEventType eventType)
+    {
+        if (_isSyncingFromViewModel || _isSyncingToViewModel)
+        {
+            return;
+        }
+
+        var block = CreateBlockFromAnnotation(item);
+        if (block is null)
+        {
+            return;
+        }
+
+        _isSyncingToViewModel = true;
+        try
+        {
+            ViewModel.UpsertBlock(block, eventType, markDirty: true);
+        }
+        finally
+        {
+            _isSyncingToViewModel = false;
+        }
+    }
+
+    private void SyncRemoveToViewModel(AnnotationItem item)
+    {
+        if (_isSyncingFromViewModel || _isSyncingToViewModel)
+        {
+            return;
+        }
+
+        _isSyncingToViewModel = true;
+        try
+        {
+            ViewModel.RemoveBlock(item.BlockId, markDirty: true);
+        }
+        finally
+        {
+            _isSyncingToViewModel = false;
+        }
+    }
+
+    private void SyncClearAllToViewModel()
+    {
+        if (_isSyncingFromViewModel || _isSyncingToViewModel)
+        {
+            return;
+        }
+
+        _isSyncingToViewModel = true;
+        try
+        {
+            ViewModel.ClearBlocks(markDirty: true);
+        }
+        finally
+        {
+            _isSyncingToViewModel = false;
+        }
+    }
+
+    private void SyncSelectionToViewModel(AnnotationItem? item)
+    {
+        if (_isSyncingFromViewModel || _isSyncingToViewModel)
+        {
+            return;
+        }
+
+        _isSyncingToViewModel = true;
+        try
+        {
+            ViewModel.SelectBlock(item?.BlockId);
+        }
+        finally
+        {
+            _isSyncingToViewModel = false;
+        }
+    }
+
+    private void ApplySelectedBlockFromViewModel()
+    {
+        if (_isSyncingToViewModel || _isSyncingFromViewModel)
+        {
+            return;
+        }
+
+        var targetId = ViewModel.SelectedBlockId;
+        var target = string.IsNullOrWhiteSpace(targetId)
+            ? null
+            : _annotations.FirstOrDefault(annotation => string.Equals(annotation.BlockId, targetId, StringComparison.Ordinal));
+
+        _isSyncingFromViewModel = true;
+        try
+        {
+            SelectAnnotation(target);
+        }
+        finally
+        {
+            _isSyncingFromViewModel = false;
+        }
     }
 
     private void SelectAnnotation(AnnotationItem? item)
@@ -905,6 +1162,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         }
 
         RenderAdorners();
+        SyncSelectionToViewModel(item);
     }
 
     private void RenderAdorners()
@@ -1092,7 +1350,7 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         return (deltaX, deltaY);
     }
 
-    private void ClearAllAnnotations()
+    private void ClearAllAnnotations(bool syncViewModel = true)
     {
         CancelInProgressPolygon();
 
@@ -1112,9 +1370,14 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         _draftRectangle = null;
         OverlayCanvas.Children.Clear();
         ClearAdorners();
+
+        if (syncViewModel)
+        {
+            SyncClearAllToViewModel();
+        }
     }
 
-    private void RemoveAnnotation(AnnotationItem annotation)
+    private void RemoveAnnotation(AnnotationItem annotation, bool syncViewModel = true)
     {
         annotation.ShapeElement.PointerPressed -= AnnotationShape_PointerPressed;
         annotation.ShapeElement.PointerMoved -= AnnotationShape_PointerMoved;
@@ -1133,6 +1396,11 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         if (_draggingAnnotation == annotation)
         {
             _draggingAnnotation = null;
+        }
+
+        if (syncViewModel)
+        {
+            SyncRemoveToViewModel(annotation);
         }
     }
 
@@ -1225,6 +1493,40 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
     private static double Clamp(double value, double min, double max)
     {
         return Math.Max(min, Math.Min(max, value));
+    }
+
+    private static string ColorToHex(Windows.UI.Color color)
+    {
+        return $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+    }
+
+    private static Windows.UI.Color ParseColorOrFallback(string? value, Windows.UI.Color fallback)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return fallback;
+        }
+
+        var hex = value.StartsWith('#') ? value[1..] : value;
+        if (hex.Length == 6 && uint.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out var rgb))
+        {
+            return Windows.UI.Color.FromArgb(
+                0xFF,
+                (byte)((rgb >> 16) & 0xFF),
+                (byte)((rgb >> 8) & 0xFF),
+                (byte)(rgb & 0xFF));
+        }
+
+        if (hex.Length == 8 && uint.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out var argb))
+        {
+            return Windows.UI.Color.FromArgb(
+                (byte)((argb >> 24) & 0xFF),
+                (byte)((argb >> 16) & 0xFF),
+                (byte)((argb >> 8) & 0xFF),
+                (byte)(argb & 0xFF));
+        }
+
+        return fallback;
     }
 
     private static bool IsNear(Point current, Point target, double threshold)
@@ -1395,6 +1697,14 @@ public sealed partial class ImageAnnotationEditorControl : UserControl
         public AnnotationShapeKind Kind { get; init; }
 
         public Shape ShapeElement { get; init; } = null!;
+
+        public string BlockId { get; init; } = Guid.NewGuid().ToString("N");
+
+        public DateTimeOffset CreatedAtUtc { get; init; } = DateTimeOffset.UtcNow;
+
+        public string Label { get; init; } = string.Empty;
+
+        public string Note { get; init; } = string.Empty;
     }
 
     private sealed class AnnotationHandleTag
