@@ -1,7 +1,7 @@
 <Page x:Class="unoTest.Presentation.ImageAnnotationTemplatePage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:controls="using:unoTest.Controls"
+      xmlns:annotationControls="using:uIP.UI.Uno.Views.UserControls"
       xmlns:utu="using:Uno.Toolkit.UI"
       Background="{ThemeResource BackgroundBrush}">
 
@@ -13,9 +13,9 @@
 
         <utu:NavigationBar Grid.Row="0" Content="圖片標註模板"/>
 
-        <controls:ImageAnnotationEditorControl x:Name="Editor"
-                                               Grid.Row="1"
-                                               Margin="16"
-                                               ShowToolbar="False"/>
+        <annotationControls:ImageAnnotationEditorControl x:Name="Editor"
+                                                         Grid.Row="1"
+                                                         Margin="16"
+                                                         ShowToolbar="False"/>
     </Grid>
 </Page>

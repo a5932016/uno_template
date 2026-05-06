@@ -1,4 +1,4 @@
-<UserControl x:Class="unoTest.Controls.ImageAnnotationEditorControl"
+<UserControl x:Class="uIP.UI.Uno.Views.UserControls.ImageAnnotationEditorControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 

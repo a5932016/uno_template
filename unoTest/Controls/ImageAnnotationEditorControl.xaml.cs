@@ -13,7 +13,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.Storage.Streams;
 
-namespace unoTest.Controls;
+namespace uIP.UI.Uno.Views.UserControls;
 
 public sealed partial class ImageAnnotationEditorControl : UserControl
 {
