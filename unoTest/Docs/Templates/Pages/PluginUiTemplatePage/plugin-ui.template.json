@@ -1,0 +1,228 @@
+{
+  "TemplateId": "customer-onboarding",
+  "Version": "1.0",
+  "Title": "客戶開通流程",
+  "Description": "根據文件動態生成輸入表單，並把事件分派到 plugin。",
+  "InitialState": {
+    "CustomerName": "",
+    "ContactEmail": "",
+    "Channel": "email",
+    "EnableNotification": true
+  },
+  "Sections": [
+    {
+      "Id": "basic",
+      "Header": "基本資料",
+      "Layout": "Stack",
+      "Columns": 1,
+      "Elements": [
+        {
+          "Id": "customerName",
+          "ControlType": "TextBox",
+          "Label": "客戶名稱",
+          "Placeholder": "請輸入客戶名稱",
+          "IsRequired": true,
+          "IsEnabled": true,
+          "Binding": {
+            "StateKey": "CustomerName",
+            "Mode": "TwoWay",
+            "Converter": ""
+          },
+          "Options": [],
+          "Events": [
+            {
+              "Name": "changed",
+              "ActionId": "validate-customer-name"
+            }
+          ],
+          "Metadata": {
+            "Hint": "至少 2 個字"
+          }
+        },
+        {
+          "Id": "contactEmail",
+          "ControlType": "TextBox",
+          "Label": "聯絡 Email",
+          "Placeholder": "name@example.com",
+          "IsRequired": true,
+          "IsEnabled": true,
+          "Binding": {
+            "StateKey": "ContactEmail",
+            "Mode": "TwoWay",
+            "Converter": ""
+          },
+          "Options": [],
+          "Events": [
+            {
+              "Name": "changed",
+              "ActionId": "validate-email"
+            }
+          ],
+          "Metadata": {}
+        },
+        {
+          "Id": "channel",
+          "ControlType": "ComboBox",
+          "Label": "通知管道",
+          "Placeholder": "",
+          "IsRequired": true,
+          "IsEnabled": true,
+          "Binding": {
+            "StateKey": "Channel",
+            "Mode": "TwoWay",
+            "Converter": ""
+          },
+          "Options": [
+            {
+              "Value": "email",
+              "Text": "Email"
+            },
+            {
+              "Value": "sms",
+              "Text": "SMS"
+            },
+            {
+              "Value": "line",
+              "Text": "LINE"
+            }
+          ],
+          "Events": [
+            {
+              "Name": "changed",
+              "ActionId": "refresh-channel-capability"
+            }
+          ],
+          "Metadata": {}
+        },
+        {
+          "Id": "enableNotification",
+          "ControlType": "ToggleSwitch",
+          "Label": "啟用通知",
+          "Placeholder": "",
+          "IsRequired": false,
+          "IsEnabled": true,
+          "Binding": {
+            "StateKey": "EnableNotification",
+            "Mode": "TwoWay",
+            "Converter": ""
+          },
+          "Options": [],
+          "Events": [
+            {
+              "Name": "toggled",
+              "ActionId": "sync-notification-setting"
+            }
+          ],
+          "Metadata": {}
+        }
+      ]
+    },
+    {
+      "Id": "actions",
+      "Header": "操作",
+      "Layout": "Stack",
+      "Columns": 1,
+      "Elements": [
+        {
+          "Id": "previewButton",
+          "ControlType": "Button",
+          "Label": "預覽設定",
+          "Placeholder": "",
+          "IsRequired": false,
+          "IsEnabled": true,
+          "Binding": null,
+          "Options": [],
+          "Events": [
+            {
+              "Name": "click",
+              "ActionId": "open-preview"
+            }
+          ],
+          "Metadata": {
+            "Style": "Outlined"
+          }
+        },
+        {
+          "Id": "submitButton",
+          "ControlType": "Button",
+          "Label": "建立客戶",
+          "Placeholder": "",
+          "IsRequired": false,
+          "IsEnabled": true,
+          "Binding": null,
+          "Options": [],
+          "Events": [
+            {
+              "Name": "click",
+              "ActionId": "submit-create-customer"
+            }
+          ],
+          "Metadata": {
+            "Style": "Filled"
+          }
+        }
+      ]
+    }
+  ],
+  "Actions": [
+    {
+      "Id": "validate-customer-name",
+      "Plugin": "core.validation",
+      "Command": "validateRequired",
+      "Payload": {
+        "StateKey": "CustomerName",
+        "DisplayName": "客戶名稱"
+      }
+    },
+    {
+      "Id": "validate-email",
+      "Plugin": "core.validation",
+      "Command": "validateEmail",
+      "Payload": {
+        "StateKey": "ContactEmail"
+      }
+    },
+    {
+      "Id": "refresh-channel-capability",
+      "Plugin": "crm.channel",
+      "Command": "refreshCapability",
+      "Payload": {
+        "ChannelStateKey": "Channel"
+      }
+    },
+    {
+      "Id": "sync-notification-setting",
+      "Plugin": "crm.preference",
+      "Command": "syncNotificationPreference",
+      "Payload": {
+        "EnabledStateKey": "EnableNotification"
+      }
+    },
+    {
+      "Id": "open-preview",
+      "Plugin": "core.navigation",
+      "Command": "openPreviewDialog",
+      "Payload": {
+        "TemplateId": "customer-onboarding"
+      }
+    },
+    {
+      "Id": "submit-create-customer",
+      "Plugin": "crm.customer",
+      "Command": "createCustomer",
+      "Payload": {
+        "UseState": "CustomerName,ContactEmail,Channel,EnableNotification"
+      }
+    }
+  ],
+  "PageActions": [
+    {
+      "Id": "sync-defaults",
+      "Plugin": "crm.bootstrap",
+      "Command": "syncDefaults",
+      "Payload": {
+        "TenantId": "demo-tenant"
+      }
+    }
+  ]
+}

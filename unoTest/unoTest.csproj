@@ -9,6 +9,11 @@
     <Compile Remove="Services\SqliteDbConnectionFactory.cs" />
     <Compile Remove="Services\SqliteNodeGraphRepository.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Docs\Templates\Pages\PluginUiTemplatePage\plugin-ui.template.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <PropertyGroup>
     <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-browserwasm;net9.0-desktop</TargetFrameworks>
 

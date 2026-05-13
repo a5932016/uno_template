@@ -67,6 +67,9 @@ public partial class DemoIndexViewModel : ObservableObject
 
             new DemoItem("圖片標註模板", "載入圖片、移動視圖、方框與多邊形描邊，並可另存新檔", "\uE7C3", 
                 Windows.UI.Color.FromArgb(255, 239, 68, 68), "ImageAnnotationTemplate", true, NavigateTo),
+
+            new DemoItem("Plugin 動態頁模板", "讀取 JSON 文件生成 UI，並透過 plugin action 處理事件", "\uE9D9",
+                Windows.UI.Color.FromArgb(255, 37, 99, 235), "PluginUiTemplate", true, NavigateTo),
             
             new DemoItem("設定頁面", "主題、語言、通知等應用程式設定範例", "\uE713", 
                 Windows.UI.Color.FromArgb(255, 107, 114, 128), "Settings", false, NavigateTo),

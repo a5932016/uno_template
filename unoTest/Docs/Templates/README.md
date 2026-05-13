@@ -22,6 +22,7 @@
 - ImageAnnotationTemplatePage: `Pages/ImageAnnotationTemplatePage/README.md`
 - ProductListPage: `Pages/ProductListPage/README.md`
 - ProductDetailPage: `Pages/ProductDetailPage/README.md`
+- PluginUiTemplatePage: `Pages/PluginUiTemplatePage/README.md`
 
 ## Controls
 
@@ -40,3 +41,4 @@
 1. `Pages/Shell/README.md`（先理解全域導航與 TitleBar）
 2. `Pages/DemoIndexPage/README.md`（功能入口）
 3. `Pages/ProductListPage/README.md` + `Pages/ProductDetailPage/README.md`（動態 UI + 資料傳遞）
+4. `Pages/PluginUiTemplatePage/README.md`（文件驅動 UI + Plugin 事件動作）

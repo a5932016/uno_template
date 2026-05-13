@@ -84,6 +84,13 @@ public partial class App : Application
                     // 註冊服務
                     services.AddSingleton<IAuthService, MockAuthService>();
                     services.AddSingleton<IProductService, MockProductService>();
+                    services.AddSingleton<IPluginUiActionDispatcher, PluginUiActionDispatcher>();
+                    services.AddTransient<IPluginUiActionHandler>(_ => new TemplateDemoPluginActionHandler("core.validation"));
+                    services.AddTransient<IPluginUiActionHandler>(_ => new TemplateDemoPluginActionHandler("crm.channel"));
+                    services.AddTransient<IPluginUiActionHandler>(_ => new TemplateDemoPluginActionHandler("crm.preference"));
+                    services.AddTransient<IPluginUiActionHandler>(_ => new TemplateDemoPluginActionHandler("core.navigation"));
+                    services.AddTransient<IPluginUiActionHandler>(_ => new TemplateDemoPluginActionHandler("crm.customer"));
+                    services.AddTransient<IPluginUiActionHandler>(_ => new TemplateDemoPluginActionHandler("crm.bootstrap"));
                     // ★ TitleBarStateService：Singleton，跨頁面共享 TitleBar 狀態
                     services.AddSingleton<TitleBarStateService>();
 #if __WASM__
@@ -154,6 +161,7 @@ public partial class App : Application
             new ViewMap<DialogDemoPage>(),
             new ViewMap<LocalizationDemoPage>(),
             new ViewMap<ImageAnnotationTemplatePage>(),
+            new ViewMap<PluginUiTemplatePage, PluginUiTemplateViewModel>(),
             // ★ 動態 UI + 資料傳遞示範頁面
             new ViewMap<ProductListPage, ProductListViewModel>(),
             new DataViewMap<ProductDetailPage, ProductDetailViewModel, ProductNavData>()
@@ -179,6 +187,7 @@ public partial class App : Application
                     new ("DialogDemo", View: views.FindByView<DialogDemoPage>()),
                     new ("LocalizationDemo", View: views.FindByView<LocalizationDemoPage>()),
                     new ("ImageAnnotationTemplate", View: views.FindByView<ImageAnnotationTemplatePage>()),
+                    new ("PluginUiTemplate", View: views.FindByViewModel<PluginUiTemplateViewModel>()),
                     // ★ 動態 UI + 資料傳遞示範
                     new ("ProductList", View: views.FindByViewModel<ProductListViewModel>()),
                     new ("ProductDetail", View: views.FindByViewModel<ProductDetailViewModel>()),
